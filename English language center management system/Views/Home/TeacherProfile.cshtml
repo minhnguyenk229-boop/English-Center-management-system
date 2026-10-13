@@ -1,0 +1,217 @@
+﻿@using English_language_center_management_system.Models.ViewModels.Home
+
+@model TeacherProfileViewModel
+
+@{
+    ViewBag.Title = "Hồ sơ giáo viên";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+<div class="teacher-profile-page">
+
+    <div class="teacher-profile-header">
+        <div>
+            <div class="teacher-profile-eyebrow">
+                TEACHER PORTAL
+            </div>
+
+            <h1>Hồ sơ cá nhân</h1>
+
+            <p>
+                Cập nhật thông tin liên hệ và hồ sơ chuyên môn của bạn.
+            </p>
+        </div>
+
+        <a href="@Url.Action("TeacherDashboard", "Home")"
+           class="teacher-profile-back">
+            ← Quay lại tổng quan
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="teacher-profile-alert success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @using (Html.BeginForm(
+        "TeacherProfile",
+        "Home",
+        FormMethod.Post,
+        new { @class = "teacher-profile-form" }))
+    {
+        @Html.AntiForgeryToken()
+
+        @Html.ValidationSummary(
+            false,
+            "",
+            new { @class = "teacher-profile-validation-summary" })
+
+        <div class="teacher-profile-layout">
+
+            <section class="teacher-profile-card">
+
+                <div class="teacher-profile-card-heading">
+                    <div class="teacher-profile-avatar">
+                        @(
+                            string.IsNullOrWhiteSpace(Model.FullName)
+                                ? "GV"
+                                : Model.FullName.Trim().Substring(0, 1).ToUpper()
+                        )
+                    </div>
+
+                    <div>
+                        <h2>Thông tin tài khoản</h2>
+                        <p>Thông tin cơ bản và liên hệ.</p>
+                    </div>
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.Username)
+
+                    <input type="text"
+                           class="teacher-profile-input"
+                           value="@Model.Username"
+                           readonly="readonly" />
+
+                    <small>
+                        Tên đăng nhập không thể thay đổi tại đây.
+                    </small>
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.FullName)
+
+                    @Html.TextBoxFor(
+                        m => m.FullName,
+                        new
+                        {
+                            @class = "teacher-profile-input",
+                            maxlength = "100",
+                            placeholder = "Nhập họ và tên",
+                            required = "required"
+                        })
+
+                    @Html.ValidationMessageFor(
+                        m => m.FullName,
+                        "",
+                        new { @class = "teacher-profile-error" })
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.Email)
+
+                    @Html.TextBoxFor(
+                        m => m.Email,
+                        new
+                        {
+                            @class = "teacher-profile-input",
+                            type = "email",
+                            maxlength = "100",
+                            placeholder = "example@email.com",
+                            required = "required"
+                        })
+
+                    @Html.ValidationMessageFor(
+                        m => m.Email,
+                        "",
+                        new { @class = "teacher-profile-error" })
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.Phone)
+
+                    @Html.TextBoxFor(
+                        m => m.Phone,
+                        new
+                        {
+                            @class = "teacher-profile-input",
+                            type = "tel",
+                            maxlength = "20",
+                            placeholder = "Nhập số điện thoại"
+                        })
+
+                    @Html.ValidationMessageFor(
+                        m => m.Phone,
+                        "",
+                        new { @class = "teacher-profile-error" })
+                </div>
+
+            </section>
+
+            <section class="teacher-profile-card">
+
+                <div class="teacher-profile-section-heading">
+                    <span class="teacher-profile-section-icon">✎</span>
+
+                    <div>
+                        <h2>Hồ sơ chuyên môn</h2>
+                        <p>
+                            Giúp trung tâm và học viên hiểu hơn về bạn.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.Specialization)
+
+                    @Html.TextBoxFor(
+                        m => m.Specialization,
+                        new
+                        {
+                            @class = "teacher-profile-input",
+                            maxlength = "100",
+                            placeholder = "Ví dụ: Giao tiếp, IELTS, TOEIC"
+                        })
+
+                    @Html.ValidationMessageFor(
+                        m => m.Specialization,
+                        "",
+                        new { @class = "teacher-profile-error" })
+                </div>
+
+                <div class="teacher-profile-field">
+                    @Html.LabelFor(m => m.Bio)
+
+                    @Html.TextAreaFor(
+                        m => m.Bio,
+                        new
+                        {
+                            @class = "teacher-profile-textarea",
+                            rows = "8",
+                            maxlength = "4000",
+                            placeholder = "Giới thiệu kinh nghiệm, phương pháp giảng dạy và thế mạnh của bạn..."
+                        })
+
+                    @Html.ValidationMessageFor(
+                        m => m.Bio,
+                        "",
+                        new { @class = "teacher-profile-error" })
+                </div>
+
+                <div class="teacher-profile-tips">
+                    <strong>Gợi ý</strong>
+
+                    <p>
+                        Nêu rõ chuyên môn, kinh nghiệm và phương pháp
+                        giảng dạy để hồ sơ chuyên nghiệp hơn.
+                    </p>
+                </div>
+
+            </section>
+
+        </div>
+
+        <div class="teacher-profile-actions">
+            <a href="@Url.Action("TeacherDashboard", "Home")"
+               class="teacher-profile-cancel">
+                Hủy
+            </a>
+
+            <button type="submit" class="teacher-profile-save">
+                Lưu thay đổi
+            </button>
+        </div>
+    }
+</div>

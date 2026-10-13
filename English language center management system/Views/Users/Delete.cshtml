@@ -1,0 +1,419 @@
+﻿
+@model English_language_center_management_system.Models.User
+
+@{
+    ViewBag.Title = "Xóa người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string fullName = string.IsNullOrWhiteSpace(Model.FullName)
+        ? "Chưa cập nhật họ tên"
+        : Model.FullName;
+
+    string username = string.IsNullOrWhiteSpace(Model.Username)
+        ? "Chưa có tên đăng nhập"
+        : Model.Username;
+
+    string email = string.IsNullOrWhiteSpace(Model.Email)
+        ? "Chưa cập nhật"
+        : Model.Email;
+
+    string phone = string.IsNullOrWhiteSpace(Model.Phone)
+        ? "Chưa cập nhật"
+        : Model.Phone;
+
+    string roleName = Model.Role != null
+        ? Model.Role.Name
+        : "Chưa phân quyền";
+
+    string initial = string.IsNullOrWhiteSpace(fullName)
+        ? "U"
+        : fullName.Substring(0, 1).ToUpper();
+}
+
+<style>
+    .user-delete-page {
+        padding: 24px;
+        color: #25324a;
+    }
+
+    .user-delete-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .user-delete-eyebrow {
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin-bottom: 7px;
+    }
+
+    .user-delete-heading h1 {
+        color: #25324a;
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0 0 8px;
+    }
+
+    .user-delete-heading p {
+        color: #8995aa;
+        margin: 0;
+    }
+
+    .user-delete-back,
+    .user-delete-cancel,
+    .user-delete-confirm {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: .2s ease;
+    }
+
+    .user-delete-back,
+    .user-delete-cancel {
+        background: #fff;
+        color: #526078;
+        border: 1px solid #dce3ed;
+    }
+
+        .user-delete-back:hover,
+        .user-delete-cancel:hover {
+            background: #f5f7fb;
+            color: #25324a;
+        }
+
+    .user-delete-confirm {
+        background: #c92828;
+        color: #fff;
+        border: 1px solid #c92828;
+    }
+
+        .user-delete-confirm:hover {
+            background: #a91f1f;
+            border-color: #a91f1f;
+            color: #fff;
+        }
+
+    .user-delete-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 310px;
+        align-items: start;
+        gap: 22px;
+    }
+
+    .user-delete-card,
+    .user-delete-warning-card {
+        background: #fff;
+        border: 1px solid #e3e9f1;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(26, 42, 69, .04);
+    }
+
+    .user-delete-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #edf0f5;
+        font-size: 17px;
+        font-weight: 800;
+        color: #25324a;
+    }
+
+    .user-delete-card-body {
+        padding: 24px;
+    }
+
+    .user-delete-identity {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 22px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    .user-delete-avatar {
+        width: 62px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 17px;
+        background: #fff0f0;
+        color: #c92828;
+        font-size: 25px;
+        font-weight: 800;
+    }
+
+    .user-delete-identity h2 {
+        font-size: 19px;
+        font-weight: 800;
+        color: #25324a;
+        margin: 0 0 6px;
+        overflow-wrap: anywhere;
+    }
+
+    .user-delete-identity p {
+        font-size: 13px;
+        color: #8995aa;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .user-delete-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f2f6;
+    }
+
+        .user-delete-row:last-child {
+            border-bottom: none;
+        }
+
+    .user-delete-label {
+        color: #8995aa;
+        font-size: 13px;
+    }
+
+    .user-delete-value {
+        color: #25324a;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .user-delete-role {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 7px;
+        background: #eef2f8;
+        color: #526078;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .user-delete-warning-card {
+        border-top: 4px solid #c92828;
+    }
+
+    .user-delete-warning-body {
+        padding: 24px;
+    }
+
+    .user-delete-warning-icon {
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: #fff0f0;
+        color: #c92828;
+        font-size: 26px;
+        font-weight: 800;
+        margin-bottom: 18px;
+    }
+
+    .user-delete-warning-body h3 {
+        color: #25324a;
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0 0 12px;
+    }
+
+    .user-delete-warning-body p {
+        font-size: 13px;
+        color: #738097;
+        line-height: 1.8;
+        margin: 0 0 18px;
+    }
+
+    .user-delete-warning-note {
+        padding: 12px 14px;
+        border-radius: 9px;
+        background: #fff4f4;
+        color: #a92323;
+        font-size: 12px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+    }
+
+    .user-delete-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .user-delete-actions button,
+        .user-delete-actions a {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+    .user-delete-validation {
+        color: #b42323;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    @@media (max-width: 900px) {
+        .user-delete-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .user-delete-page {
+            padding: 15px;
+        }
+
+        .user-delete-card-body,
+        .user-delete-warning-body {
+            padding: 18px;
+        }
+
+        .user-delete-row {
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .user-delete-value {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="user-delete-page">
+
+    <div class="user-delete-heading">
+        <div>
+            <div class="user-delete-eyebrow">English Language Center</div>
+            <h1>Xóa người dùng</h1>
+            <p>Xem lại tài khoản trước khi thực hiện thao tác xóa.</p>
+        </div>
+
+        <a href="@Url.Action("Index", "Users")"
+           class="user-delete-back">
+            ← Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="user-delete-layout">
+
+        <section class="user-delete-card">
+            <div class="user-delete-card-header">
+                Thông tin tài khoản
+            </div>
+
+            <div class="user-delete-card-body">
+
+                <div class="user-delete-identity">
+                    <div class="user-delete-avatar">@initial</div>
+
+                    <div>
+                        <h2>@fullName</h2>
+                        <p>@@@username</p>
+                    </div>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Mã người dùng</span>
+                    <span class="user-delete-value">#@Model.Id</span>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Họ và tên</span>
+                    <span class="user-delete-value">@fullName</span>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Email</span>
+                    <span class="user-delete-value">@email</span>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Số điện thoại</span>
+                    <span class="user-delete-value">@phone</span>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Vai trò</span>
+                    <span class="user-delete-value">
+                        <span class="user-delete-role">@roleName</span>
+                    </span>
+                </div>
+
+                <div class="user-delete-row">
+                    <span class="user-delete-label">Ngày tạo</span>
+                    <span class="user-delete-value">
+                        @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </span>
+                </div>
+
+            </div>
+        </section>
+
+        <aside class="user-delete-warning-card">
+            <div class="user-delete-warning-body">
+
+                <div class="user-delete-warning-icon">!</div>
+
+                <h3>Xác nhận xóa tài khoản</h3>
+
+                <p>
+                    Bạn đang chuẩn bị xóa tài khoản
+                    <strong>@username</strong>.
+                    Hãy kiểm tra kỹ thông tin trước khi xác nhận.
+                </p>
+
+                <div class="user-delete-warning-note">
+                    <strong>Lưu ý:</strong> Thao tác xóa có thể ảnh hưởng
+                    đến dữ liệu liên quan. Hệ thống có thể từ chối xóa
+                    nếu tài khoản vẫn đang được sử dụng ở các chức năng khác.
+                </div>
+
+                @using (Html.BeginForm("Delete", "Users", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="user-delete-validation">
+                        @Html.ValidationSummary(true)
+                    </div>
+
+                    <div class="user-delete-actions">
+                        <button type="submit"
+                                class="user-delete-confirm"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?');">
+                            Xác nhận xóa
+                        </button>
+
+                        <a href="@Url.Action("Index", "Users")"
+                           class="user-delete-cancel">
+                            Hủy bỏ
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </aside>
+
+    </div>
+</div>

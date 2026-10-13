@@ -1,0 +1,57 @@
+﻿@model IEnumerable<English_language_center_management_system.Models.AssessmentScore>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Enrollment.Status)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MidtermScore)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FinalScore)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TotalScore)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LearningOutcome)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Enrollment.Status)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MidtermScore)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.FinalScore)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TotalScore)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LearningOutcome)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.EnrollmentId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.EnrollmentId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.EnrollmentId })
+        </td>
+    </tr>
+}
+
+</table>

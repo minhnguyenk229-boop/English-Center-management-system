@@ -1,0 +1,377 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.StudentTimetableViewModel
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using English_language_center_management_system.Models
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Thời khóa biểu cá nhân";
+
+    var studentName =
+        Model.StudentInfo != null &&
+        !string.IsNullOrWhiteSpace(Model.StudentInfo.FullName)
+        ? Model.StudentInfo.FullName
+        : "Học viên";
+
+    var sessions = Model.Sessions ?? new List<ClassSession>();
+
+    var weekdayNames = new[]
+    {
+        "Thứ Hai",
+        "Thứ Ba",
+        "Thứ Tư",
+        "Thứ Năm",
+        "Thứ Sáu",
+        "Thứ Bảy",
+        "Chủ Nhật"
+    };
+
+    int totalSessions = sessions.Count;
+    int classCount = sessions
+        .Select(s => s.ClassId)
+        .Distinct()
+        .Count();
+}
+
+<div class="student-portal timetable-portal">
+
+    @* SIDEBAR *@
+    <aside class="student-sidebar">
+
+        <a class="student-brand"
+           href="@Url.Action("StudentDashboard", "Home")">
+
+            <span class="student-brand-mark">EC</span>
+
+            <span class="student-brand-text">
+                ELC PORTAL
+                <small>STUDENT SPACE</small>
+            </span>
+
+        </a>
+
+        <div class="student-sidebar-caption">
+            KHÔNG GIAN HỌC TẬP
+        </div>
+
+        <nav class="student-side-nav">
+
+            <a href="@Url.Action("StudentDashboard", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="@Url.Action("StudentTimetable", "Home")"
+               class="student-nav-link is-active">
+                <span class="student-nav-icon">▦</span>
+                Thời khóa biểu
+            </a>
+
+            <a href="@Url.Action("Index", "Courses")"
+               class="student-nav-link">
+                <span class="student-nav-icon">＋</span>
+                Đăng ký lớp học
+            </a>
+
+            <a href="@Url.Action("StudentPayments", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">₫</span>
+                Học phí &amp; hóa đơn
+            </a>
+
+        </nav>
+
+        <div class="student-sidebar-bottom">
+
+            <div class="student-support-card">
+                <span class="student-support-icon">?</span>
+
+                <strong>Cần hỗ trợ?</strong>
+
+                <p>Liên hệ trung tâm khi bạn cần giải đáp.</p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "student-support-link" }
+                )
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "student-logout-link" }
+            )
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="student-main">
+
+        <header class="student-topbar">
+
+            <div class="student-topbar-title">
+                <span>CỔNG HỌC VIÊN</span>
+                <strong>Thời khóa biểu</strong>
+            </div>
+
+            <div class="student-topbar-user">
+
+                <span class="student-avatar-small">
+                    @studentName.Substring(0, 1).ToUpper()
+                </span>
+
+                <span class="student-topbar-user-info">
+                    <strong>@studentName</strong>
+                    <small>Học viên</small>
+                </span>
+
+            </div>
+
+        </header>
+
+        <main class="student-content">
+
+            <div class="student-breadcrumb">
+                Dashboard <span>/</span> Thời khóa biểu
+            </div>
+
+            @* TIÊU ĐỀ *@
+            <section class="timetable-intro">
+
+                <div>
+                    <span class="student-panel-eyebrow">
+                        YOUR WEEKLY SCHEDULE
+                    </span>
+
+                    <h1>Thời khóa biểu cá nhân</h1>
+
+                    <p>
+                        Theo dõi các buổi học trong tuần,
+                        thời gian bắt đầu và phòng học của bạn.
+                    </p>
+                </div>
+
+            </section>
+
+            @* THỐNG KÊ *@
+            <section class="timetable-summary">
+
+                <article class="timetable-summary-card">
+                    <span class="timetable-summary-icon">▦</span>
+
+                    <div>
+                        <small>Buổi học trong tuần</small>
+                        <strong>@totalSessions</strong>
+                    </div>
+                </article>
+
+                <article class="timetable-summary-card">
+                    <span class="timetable-summary-icon">▣</span>
+
+                    <div>
+                        <small>Lớp có lịch trong tuần</small>
+                        <strong>@classCount</strong>
+                    </div>
+                </article>
+
+                <article class="timetable-summary-card">
+                    <span class="timetable-summary-icon">◷</span>
+
+                    <div>
+                        <small>Khoảng thời gian</small>
+
+                        <strong>
+                            @Model.WeekStart.ToString("dd/MM")
+                            –
+                            @Model.WeekEnd.ToString("dd/MM/yyyy")
+                        </strong>
+                    </div>
+                </article>
+
+            </section>
+
+            @* ĐIỀU HƯỚNG TUẦN *@
+            <section class="student-panel timetable-panel">
+
+                <div class="timetable-toolbar">
+
+                    <div>
+                        <span class="student-panel-eyebrow">
+                            WEEKLY VIEW
+                        </span>
+
+                        <h2>
+                            Tuần từ
+                            @Model.WeekStart.ToString("dd/MM/yyyy")
+                        </h2>
+
+                        <p>
+                            Chọn tuần để xem lịch học tương ứng.
+                        </p>
+                    </div>
+
+                    <div class="timetable-week-actions">
+
+                        @Html.ActionLink(
+                            "← Tuần trước",
+                            "StudentTimetable",
+                            "Home",
+                            new { weekOffset = Model.WeekOffset - 1 },
+                            new { @class = "btn btn-outline-primary" }
+                        )
+
+                        @Html.ActionLink(
+                            "Tuần này",
+                            "StudentTimetable",
+                            "Home",
+                            null,
+                            new { @class = "btn btn-outline-secondary" }
+                        )
+
+                        @Html.ActionLink(
+                            "Tuần sau →",
+                            "StudentTimetable",
+                            "Home",
+                            new { weekOffset = Model.WeekOffset + 1 },
+                            new { @class = "btn btn-primary" }
+                        )
+
+                    </div>
+
+                </div>
+
+                @* LỊCH 7 NGÀY *@
+                <div class="timetable-week-grid">
+
+                    @for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+                    {
+                        var day = Model.WeekStart.AddDays(dayIndex);
+
+                        var daySessions = sessions
+                            .Where(s => s.SessionDate.Date == day.Date)
+                            .OrderBy(s => s.StartTime)
+                            .ToList();
+
+                        <section class="timetable-day">
+
+                            <header class="timetable-day-header">
+
+                                <span>@weekdayNames[dayIndex]</span>
+
+                                <strong>
+                                    @day.ToString("dd/MM")
+                                </strong>
+
+                                <small>
+                                    @daySessions.Count buổi học
+                                </small>
+
+                            </header>
+
+                            <div class="timetable-day-content">
+
+                                @if (daySessions.Any())
+                                {
+                                    foreach (var session in daySessions)
+                                    {
+                                        var courseName =
+                                            session.Class != null &&
+                                            session.Class.Course != null
+                                            ? session.Class.Course.CourseName
+                                            : session.Class != null
+                                                ? session.Class.ClassName
+                                                : "Buổi học";
+
+                                        var className =
+                                            session.Class != null
+                                            ? session.Class.ClassName
+                                            : "Chưa cập nhật";
+
+                                        var roomName =
+                                            !string.IsNullOrWhiteSpace(session.Room)
+                                            ? session.Room
+                                            : session.Class != null
+                                                ? session.Class.Room
+                                                : "Chưa xếp phòng";
+
+                                        <article class="timetable-event">
+
+                                            <div class="timetable-event-time">
+                                                @session.StartTime.ToString(@"hh\:mm")
+                                                –
+                                                @session.EndTime.ToString(@"hh\:mm")
+                                            </div>
+
+                                            <h3>@courseName</h3>
+
+                                            <p>
+                                                Lớp: @className
+                                            </p>
+
+                                            <div class="timetable-event-room">
+                                                <span>⌂</span>
+                                                @roomName
+                                            </div>
+
+                                        </article>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="timetable-day-empty">
+                                        Không có lịch
+                                    </div>
+                                }
+
+                            </div>
+
+                        </section>
+                    }
+
+                </div>
+
+                @if (!sessions.Any())
+                {
+                    <div class="timetable-empty-notice">
+
+                        <strong>Tuần này chưa có lịch học</strong>
+
+                        <p>
+                            Có thể bạn chưa có lớp được duyệt,
+                            hoặc trung tâm chưa xếp lịch cho tuần này.
+                        </p>
+
+                        @Html.ActionLink(
+                            "Về Dashboard",
+                            "StudentDashboard",
+                            "Home",
+                            null,
+                            new { @class = "btn btn-outline-primary" }
+                        )
+
+                    </div>
+                }
+
+            </section>
+
+        </main>
+
+        <footer class="student-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Student Information System</span>
+        </footer>
+
+    </div>
+
+</div>

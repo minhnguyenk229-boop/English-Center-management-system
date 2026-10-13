@@ -1,0 +1,536 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.TeacherTeachingScheduleViewModel
+
+@using System.Collections.Generic
+@using System.Linq
+@using English_language_center_management_system.Models
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Lớp phụ trách & Lịch dạy";
+
+    var teacherName =
+        Model.TeacherInfo != null &&
+        !string.IsNullOrWhiteSpace(Model.TeacherInfo.FullName)
+        ? Model.TeacherInfo.FullName
+        : "Giáo viên";
+
+    var initial = teacherName.Substring(0, 1).ToUpper();
+
+    var classes = Model.AssignedClasses ?? new List<Class>();
+    var sessions = Model.Sessions ?? new List<ClassSession>();
+    var enrolledCounts = Model.EnrolledCounts
+        ?? new Dictionary<int, int>();
+
+    var weekdayNames = new[]
+    {
+        "Thứ Hai",
+        "Thứ Ba",
+        "Thứ Tư",
+        "Thứ Năm",
+        "Thứ Sáu",
+        "Thứ Bảy",
+        "Chủ Nhật"
+    };
+}
+
+<div class="teacher-portal">
+
+    @* SIDEBAR *@
+    <aside class="teacher-sidebar">
+
+        <a class="teacher-brand"
+           href="@Url.Action("TeacherDashboard", "Home")">
+
+            <span class="teacher-brand-mark">EC</span>
+
+            <span class="teacher-brand-text">
+                ELC PORTAL
+                <small>TEACHER SPACE</small>
+            </span>
+
+        </a>
+
+        <div class="teacher-sidebar-caption">
+            KHÔNG GIAN GIẢNG DẠY
+        </div>
+
+        <nav class="teacher-side-nav">
+
+            <a href="@Url.Action("TeacherDashboard", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="#teacher-classes"
+               class="teacher-nav-link is-active">
+                <span class="teacher-nav-icon">▣</span>
+                Lớp phụ trách
+            </a>
+
+            <a href="#teacher-weekly-schedule"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">▦</span>
+                Lịch dạy
+            </a>
+
+            <a href="@Url.Action("TeacherAttendance", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">✓</span>
+                Điểm danh
+            </a>
+
+            <a href="@Url.Action("TeacherGrades", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">A+</span>
+                Nhập điểm & đánh giá
+            </a>
+
+            <a href="@Url.Action("TeacherSubmissions", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">📄</span>
+                Bài nộp học viên
+            </a>
+
+
+            <a href="@Url.Action("TeacherDashboard", "Home")#teacher-assignments"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">▤</span>
+                Bài tập
+            </a>
+
+            <a href="@Url.Action("TeacherDashboard", "Home")#teacher-submissions"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">✓</span>
+                Bài nộp cần chấm
+            </a>
+
+            <a href="@Url.Action("TeacherProfile", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">◎</span>
+                Hồ sơ cá nhân
+            </a>
+
+        </nav>
+
+        <div class="teacher-sidebar-bottom">
+
+            <div class="teacher-support-card">
+                <span class="teacher-support-icon">?</span>
+
+                <strong>Cần hỗ trợ?</strong>
+
+                <p>
+                    Liên hệ trung tâm để được hỗ trợ về lịch dạy.
+                </p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "teacher-support-link" })
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "teacher-logout-link" })
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="teacher-main">
+
+        <header class="teacher-topbar">
+
+            <div class="teacher-topbar-title">
+                <span>CỔNG GIÁO VIÊN</span>
+                <strong>Lớp phụ trách &amp; Lịch dạy</strong>
+            </div>
+
+            <div class="teacher-topbar-user">
+
+                <span class="teacher-avatar-small">
+                    @initial
+                </span>
+
+                <span class="teacher-topbar-user-info">
+                    <strong>@teacherName</strong>
+                    <small>Giáo viên</small>
+                </span>
+
+            </div>
+
+        </header>
+
+        <main class="teacher-content">
+
+            <div class="teacher-breadcrumb">
+                Dashboard <span>/</span> Lớp phụ trách &amp; Lịch dạy
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @* TIÊU ĐỀ *@
+            <section class="teacher-schedule-intro">
+
+                <div>
+                    <span class="teacher-panel-eyebrow">
+                        TEACHING WORKSPACE
+                    </span>
+
+                    <h1>Lớp phụ trách &amp; Lịch dạy</h1>
+
+                    <p>
+                        Xem danh sách lớp được phân công và các buổi
+                        giảng dạy trong tuần.
+                    </p>
+                </div>
+
+            </section>
+
+            @* THỐNG KÊ *@
+            <section class="teacher-timetable-stats">
+
+                <article class="teacher-timetable-stat">
+
+                    <span class="teacher-timetable-stat-icon">
+                        ▣
+                    </span>
+
+                    <div>
+                        <small>Tổng lớp phụ trách</small>
+                        <strong>@classes.Count</strong>
+                    </div>
+
+                </article>
+
+                <article class="teacher-timetable-stat">
+
+                    <span class="teacher-timetable-stat-icon">
+                        ◎
+                    </span>
+
+                    <div>
+                        <small>Tổng học viên</small>
+                        <strong>
+                            @enrolledCounts.Values.Sum()
+                        </strong>
+                    </div>
+
+                </article>
+
+                <article class="teacher-timetable-stat">
+
+                    <span class="teacher-timetable-stat-icon">
+                        ▦
+                    </span>
+
+                    <div>
+                        <small>Buổi dạy trong tuần</small>
+                        <strong>@sessions.Count</strong>
+                    </div>
+
+                </article>
+
+            </section>
+
+            @* DANH SÁCH LỚP *@
+            <section class="teacher-panel teacher-schedule-panel"
+                     id="teacher-classes">
+
+                <div class="teacher-panel-heading">
+
+                    <div>
+                        <span class="teacher-panel-eyebrow">
+                            ASSIGNED CLASSES
+                        </span>
+
+                        <h2>Các lớp đang phụ trách</h2>
+
+                        <p>
+                            Thông tin lớp học, khóa học, phòng và sĩ số.
+                        </p>
+                    </div>
+
+                </div>
+
+                @if (classes.Any())
+                {
+                    <div class="teacher-managed-class-grid">
+
+                        @foreach (var classroom in classes)
+                        {
+                            int studentCount = enrolledCounts.ContainsKey(
+                                classroom.Id)
+                                ? enrolledCounts[classroom.Id]
+                                : 0;
+
+                            var courseName = classroom.Course != null
+                                ? classroom.Course.CourseName
+                                : "Khóa học";
+
+                            var statusLabel =
+                                classroom.Status == "Open"
+                                ? "Mở đăng ký"
+                                : classroom.Status == "Studying"
+                                    ? "Đang học"
+                                    : classroom.Status == "Completed"
+                                        ? "Đã kết thúc"
+                                        : classroom.Status == "Closed"
+                                            ? "Đã đóng"
+                                            : classroom.Status;
+
+                            var statusClass =
+                                classroom.Status == "Studying"
+                                ? "teacher-class-status-active"
+                                : classroom.Status == "Open"
+                                    ? "teacher-class-status-open"
+                                    : "teacher-class-status-other";
+
+                            <article class="teacher-managed-class-card">
+
+                                <div class="teacher-managed-class-top">
+
+                                    <span class="teacher-managed-class-icon">
+                                        EC
+                                    </span>
+
+                                    <span class="teacher-managed-class-status @statusClass">
+                                        @statusLabel
+                                    </span>
+
+                                </div>
+
+                                <span class="teacher-managed-course-name">
+                                    @courseName
+                                </span>
+
+                                <h3>@classroom.ClassName</h3>
+
+                                <div class="teacher-managed-class-details">
+
+                                    <div>
+                                        <span>Phòng học</span>
+                                        <strong>@classroom.Room</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Sĩ số</span>
+                                        <strong>
+                                            @studentCount / @classroom.MaxCapacity
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                                <div class="teacher-managed-schedule-description">
+
+                                    <span>▦</span>
+
+                                    <p>
+                                        @(string.IsNullOrWhiteSpace(
+                                            classroom.ScheduleDescription)
+                                            ? "Lịch dự kiến chưa cập nhật"
+                                            : classroom.ScheduleDescription)
+                                    </p>
+
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="teacher-empty-state">
+
+                        <div class="teacher-empty-icon">▣</div>
+
+                        <h3>Bạn chưa được phân công lớp</h3>
+
+                        <p>
+                            Các lớp được phân công bởi quản trị viên
+                            sẽ xuất hiện tại đây.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+            @* LỊCH DẠY THEO TUẦN *@
+            <section class="teacher-panel teacher-schedule-panel"
+                     id="teacher-weekly-schedule">
+
+                <div class="teacher-week-toolbar">
+
+                    <div>
+                        <span class="teacher-panel-eyebrow">
+                            WEEKLY TEACHING SCHEDULE
+                        </span>
+
+                        <h2>Lịch dạy theo tuần</h2>
+
+                        <p>
+                            Từ @Model.WeekStart.ToString("dd/MM/yyyy")
+                            đến @Model.WeekEnd.ToString("dd/MM/yyyy")
+                        </p>
+                    </div>
+
+                    <div class="teacher-week-actions">
+
+                        @Html.ActionLink(
+                            "← Tuần trước",
+                            "TeacherTeachingSchedule",
+                            "Home",
+                            new { weekOffset = Model.WeekOffset - 1 },
+                            new { @class = "btn btn-outline-primary" })
+
+                        @Html.ActionLink(
+                            "Tuần này",
+                            "TeacherTeachingSchedule",
+                            "Home",
+                            null,
+                            new { @class = "btn btn-outline-secondary" })
+
+                        @Html.ActionLink(
+                            "Tuần sau →",
+                            "TeacherTeachingSchedule",
+                            "Home",
+                            new { weekOffset = Model.WeekOffset + 1 },
+                            new { @class = "btn btn-primary" })
+
+                    </div>
+
+                </div>
+
+                <div class="teacher-week-grid">
+
+                    @for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+                    {
+                        var day = Model.WeekStart.AddDays(dayIndex);
+
+                        var daySessions = sessions
+                            .Where(s => s.SessionDate.Date == day.Date)
+                            .OrderBy(s => s.StartTime)
+                            .ToList();
+
+                        <section class="teacher-week-day">
+
+                            <header class="teacher-week-day-header">
+
+                                <span>@weekdayNames[dayIndex]</span>
+
+                                <strong>@day.ToString("dd/MM")</strong>
+
+                                <small>@daySessions.Count buổi dạy</small>
+
+                            </header>
+
+                            <div class="teacher-week-day-content">
+
+                                @if (daySessions.Any())
+                                {
+                                    foreach (var session in daySessions)
+                                    {
+                                        var sessionClass = session.Class;
+
+                                        var sessionTitle =
+                                            sessionClass != null &&
+                                            sessionClass.Course != null
+                                            ? sessionClass.Course.CourseName
+                                            : sessionClass != null
+                                                ? sessionClass.ClassName
+                                                : "Buổi dạy";
+
+                                        var sessionRoom =
+                                            !string.IsNullOrWhiteSpace(session.Room)
+                                            ? session.Room
+                                            : sessionClass != null
+                                                ? sessionClass.Room
+                                                : "Chưa cập nhật";
+
+                                        <article class="teacher-week-event">
+
+                                            <div class="teacher-week-event-time">
+                                                @session.StartTime.ToString(@"hh\:mm")
+                                                –
+                                                @session.EndTime.ToString(@"hh\:mm")
+                                            </div>
+
+                                            <h3>@sessionTitle</h3>
+
+                                            <p>
+                                                @(sessionClass != null
+                                                    ? sessionClass.ClassName
+                                                    : "Chưa cập nhật")
+                                            </p>
+
+                                            <div class="teacher-week-event-room">
+                                                Phòng: @sessionRoom
+                                            </div>
+
+                                        </article>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="teacher-week-day-empty">
+                                        Không có lịch
+                                    </div>
+                                }
+
+                            </div>
+
+                        </section>
+                    }
+
+                </div>
+
+                @if (!sessions.Any())
+                {
+                    <div class="teacher-empty-state teacher-empty-state-compact">
+
+                        <div class="teacher-empty-icon">◷</div>
+
+                        <h3>Tuần này chưa có buổi dạy</h3>
+
+                        <p>
+                            Có thể chưa có lịch được tạo cho các lớp bạn phụ trách.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+        </main>
+
+        <footer class="teacher-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Teacher Information System</span>
+        </footer>
+
+    </div>
+
+</div>

@@ -1,0 +1,282 @@
+﻿@using System.Linq
+@using English_language_center_management_system.Models.ViewModels.Users
+
+@model UserIndexViewModel
+
+@{
+    ViewBag.Title = "Quản lý người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var users = Model.Users
+        ?? new System.Collections.Generic.List<
+            English_language_center_management_system.Models.User>();
+
+    var roles = Model.Roles
+        ?? new System.Collections.Generic.List<
+            English_language_center_management_system.Models.Role>();
+}
+
+<div class="admin-users-page">
+
+    <!-- HEADER -->
+    <section class="admin-users-header">
+        <div>
+            <span class="admin-users-eyebrow">USER MANAGEMENT</span>
+            <h1>Quản lý người dùng</h1>
+            <p>
+                Theo dõi tài khoản học viên, giáo viên và quản trị viên
+                trong hệ thống.
+            </p>
+        </div>
+
+        <a href="@Url.Action("Create", "Users")"
+           class="admin-users-primary-btn">
+            + Thêm người dùng
+        </a>
+    </section>
+
+    <!-- THÔNG BÁO -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="admin-users-alert success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="admin-users-alert error">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- THỐNG KÊ -->
+    <section class="admin-users-summary">
+        <article class="admin-users-summary-card">
+            <span class="admin-users-summary-icon">♙</span>
+            <div>
+                <strong>@users.Count</strong>
+                <span>Tài khoản trong kết quả</span>
+            </div>
+        </article>
+
+        <article class="admin-users-summary-card">
+            <span class="admin-users-summary-icon">▤</span>
+            <div>
+                <strong>@roles.Count</strong>
+                <span>Vai trò hệ thống</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- TÌM KIẾM VÀ LỌC -->
+    <section class="admin-users-panel">
+
+        <div class="admin-users-panel-heading">
+            <div>
+                <h2>Danh sách tài khoản</h2>
+                <p>Tìm theo tên, email, số điện thoại hoặc tên đăng nhập.</p>
+            </div>
+        </div>
+
+        <form method="get"
+              action="@Url.Action("Index", "Users")"
+              class="admin-users-filter-form">
+
+            <div class="admin-users-filter-field">
+                <label for="searchTerm">Tìm kiếm</label>
+
+                <input type="text"
+                       id="searchTerm"
+                       name="searchTerm"
+                       value="@Model.SearchTerm"
+                       class="admin-users-input"
+                       placeholder="Tên, username, email, số điện thoại..." />
+            </div>
+
+            <div class="admin-users-filter-field">
+                <label for="roleId">Lọc theo vai trò</label>
+
+                <select id="roleId"
+                        name="roleId"
+                        class="admin-users-input">
+
+                    <option value="">Tất cả vai trò</option>
+
+                    @foreach (var role in roles)
+                    {
+                        <option value="@role.Id"
+                                @(Model.SelectedRoleId == role.Id ? "selected" : "")>
+                            @role.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="admin-users-filter-actions">
+                <button type="submit"
+                        class="admin-users-primary-btn">
+                    Tìm kiếm
+                </button>
+
+                <a href="@Url.Action("Index", "Users")"
+                   class="admin-users-reset-btn">
+                    Xóa bộ lọc
+                </a>
+            </div>
+
+        </form>
+
+        <!-- BẢNG NGƯỜI DÙNG -->
+        <div class="admin-users-table-toolbar">
+            <span>
+                Hiển thị <strong>@users.Count</strong> tài khoản phù hợp
+            </span>
+        </div>
+
+        <div class="admin-users-table-wrap">
+            <table class="admin-users-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Thông tin người dùng</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (users.Any())
+                    {
+                        foreach (var user in users)
+                        {
+                            var roleName = user.Role != null
+                                ? user.Role.Name
+                                : "Chưa xác định";
+
+                            var roleClass =
+                                roleName.Equals(
+                                    "Admin",
+                                    System.StringComparison.OrdinalIgnoreCase)
+                                || roleName.Equals(
+                                    "Administrator",
+                                    System.StringComparison.OrdinalIgnoreCase)
+                                || roleName.Equals(
+                                    "Quản trị viên",
+                                    System.StringComparison.OrdinalIgnoreCase)
+                                    ? "admin-role-badge admin-role-admin"
+                                    : roleName.Equals(
+                                        "Teacher",
+                                        System.StringComparison.OrdinalIgnoreCase)
+                                      || roleName.Equals(
+                                        "Giáo viên",
+                                        System.StringComparison.OrdinalIgnoreCase)
+                                        ? "admin-role-badge admin-role-teacher"
+                                        : "admin-role-badge admin-role-student";
+
+                            <tr>
+                                <td>
+                                    <span class="admin-users-id">
+                                        #@user.Id
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="admin-users-person">
+                                        <span class="admin-users-avatar">
+                                            @(string.IsNullOrWhiteSpace(user.FullName)
+                                                ? "?"
+                                                : user.FullName.Trim().Substring(0, 1).ToUpper())
+                                        </span>
+
+                                        <div>
+                                            <strong>@user.FullName</strong>
+                                            <small>@@@user.Username</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="admin-users-email">
+                                        @user.Email
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(user.Phone)
+                                        ? "Chưa cập nhật"
+                                        : user.Phone)
+                                </td>
+
+                                <td>
+                                    <span class="@roleClass">
+                                        @roleName
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @user.CreatedAt.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td>
+                                    <div class="admin-users-actions">
+
+                                        <a href="@Url.Action(
+                                            "Details",
+                                            "Users",
+                                            new { id = user.Id })"
+                                           class="admin-users-action view"
+                                           title="Xem chi tiết">
+                                            Xem
+                                        </a>
+
+                                        <a href="@Url.Action(
+                                            "Edit",
+                                            "Users",
+                                            new { id = user.Id })"
+                                           class="admin-users-action edit"
+                                           title="Chỉnh sửa">
+                                            Sửa
+                                        </a>
+
+                                        <a href="@Url.Action(
+                                            "Delete",
+                                            "Users",
+                                            new { id = user.Id })"
+                                           class="admin-users-action delete"
+                                           title="Xóa tài khoản">
+                                            Xóa
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7">
+                                <div class="admin-users-empty">
+                                    <span>♙</span>
+                                    <strong>Không tìm thấy người dùng</strong>
+                                    <p>
+                                        Thử thay đổi từ khóa hoặc bỏ bộ lọc
+                                        để xem các tài khoản khác.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+    </section>
+
+</div>

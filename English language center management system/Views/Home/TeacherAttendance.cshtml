@@ -1,0 +1,590 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.TeacherAttendanceViewModel
+
+@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+@using English_language_center_management_system.Models
+@using English_language_center_management_system.Models.ViewModels.Home
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Điểm danh học viên";
+
+    var teacherName =
+        Model.TeacherInfo != null &&
+        !string.IsNullOrWhiteSpace(Model.TeacherInfo.FullName)
+        ? Model.TeacherInfo.FullName
+        : "Giáo viên";
+
+    var initial = teacherName.Substring(0, 1).ToUpper();
+
+    var availableSessions =
+        Model.AvailableSessions ?? new List<ClassSession>();
+
+    var students =
+        Model.Students ?? new List<TeacherAttendanceRowViewModel>();
+
+    var statusOptions = new List<SelectListItem>
+{
+        new SelectListItem { Text = "Có mặt", Value = "Present" },
+        new SelectListItem { Text = "Vắng mặt", Value = "Absent" },
+        new SelectListItem { Text = "Đi muộn", Value = "Late" },
+        new SelectListItem { Text = "Có phép", Value = "Excused" }
+    };
+
+    int presentCount = students.Count(s => s.Status == "Present");
+    int absentCount = students.Count(s => s.Status == "Absent");
+    int lateCount = students.Count(s => s.Status == "Late");
+    int excusedCount = students.Count(s => s.Status == "Excused");
+
+    var selectedSession = Model.SelectedSession;
+
+    var sessionOptions = availableSessions.Select(s =>
+        new SelectListItem
+        {
+            Value = s.Id.ToString(),
+            Text =
+                (s.Class != null ? s.Class.ClassName : "Lớp học")
+                + " | "
+                + s.SessionDate.ToString("dd/MM/yyyy")
+                + " | "
+                + s.StartTime.ToString(@"hh\:mm")
+                + " - "
+                + s.EndTime.ToString(@"hh\:mm"),
+            Selected = Model.SelectedSessionId == s.Id
+        }).ToList();
+}
+
+<div class="teacher-portal">
+
+    @* SIDEBAR *@
+    <aside class="teacher-sidebar">
+
+        <a class="teacher-brand"
+           href="@Url.Action("TeacherDashboard", "Home")">
+
+            <span class="teacher-brand-mark">EC</span>
+
+            <span class="teacher-brand-text">
+                ELC PORTAL
+                <small>TEACHER SPACE</small>
+            </span>
+
+        </a>
+
+        <div class="teacher-sidebar-caption">
+            KHÔNG GIAN GIẢNG DẠY
+        </div>
+
+        <nav class="teacher-side-nav">
+
+            <a href="@Url.Action("TeacherDashboard", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="@Url.Action("TeacherTeachingSchedule", "Home")#teacher-classes"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">▣</span>
+                Lớp phụ trách
+            </a>
+
+            <a href="@Url.Action("TeacherTeachingSchedule", "Home")#teacher-weekly-schedule"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">▦</span>
+                Lịch dạy
+            </a>
+
+            <a href="@Url.Action("TeacherAttendance", "Home")"
+               class="teacher-nav-link is-active">
+                <span class="teacher-nav-icon">✓</span>
+                Điểm danh
+            </a>
+
+            <a href="@Url.Action("TeacherGrades", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">A+</span>
+                Nhập điểm & đánh giá
+            </a>
+
+            <a href="@Url.Action("TeacherSubmissions", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">📄</span>
+                Bài nộp học viên
+            </a>
+
+            <a href="@Url.Action("TeacherDashboard", "Home")#teacher-assignments"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">▤</span>
+                Bài tập
+            </a>
+
+            <a href="@Url.Action("TeacherDashboard", "Home")#teacher-submissions"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">✓</span>
+                Bài nộp cần chấm
+            </a>
+            <a href="@Url.Action("TeacherProfile", "Home")"
+               class="teacher-nav-link">
+                <span class="teacher-nav-icon">◎</span>
+                Hồ sơ cá nhân
+            </a>
+
+        </nav>
+
+        <div class="teacher-sidebar-bottom">
+
+            <div class="teacher-support-card">
+                <span class="teacher-support-icon">?</span>
+
+                <strong>Cần hỗ trợ?</strong>
+
+                <p>
+                    Liên hệ trung tâm nếu bạn cần hỗ trợ về điểm danh.
+                </p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "teacher-support-link" })
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "teacher-logout-link" })
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="teacher-main">
+
+        <header class="teacher-topbar">
+
+            <div class="teacher-topbar-title">
+                <span>CỔNG GIÁO VIÊN</span>
+                <strong>Điểm danh học viên</strong>
+            </div>
+
+            <div class="teacher-topbar-user">
+
+                <span class="teacher-avatar-small">
+                    @initial
+                </span>
+
+                <span class="teacher-topbar-user-info">
+                    <strong>@teacherName</strong>
+                    <small>Giáo viên</small>
+                </span>
+
+            </div>
+
+        </header>
+
+        <main class="teacher-content">
+
+            <div class="teacher-breadcrumb">
+                Dashboard <span>/</span> Điểm danh học viên
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @* TIÊU ĐỀ *@
+            <section class="teacher-attendance-intro">
+
+                <div>
+                    <span class="teacher-panel-eyebrow">
+                        ATTENDANCE MANAGEMENT
+                    </span>
+
+                    <h1>Điểm danh học viên</h1>
+
+                    <p>
+                        Chọn buổi học, xác nhận sự có mặt và lưu
+                        trạng thái điểm danh của từng học viên.
+                    </p>
+                </div>
+
+            </section>
+
+            @* CHỌN BUỔI HỌC *@
+            <section class="teacher-panel teacher-attendance-panel">
+
+                <div class="teacher-panel-heading">
+
+                    <div>
+                        <span class="teacher-panel-eyebrow">
+                            SELECT SESSION
+                        </span>
+
+                        <h2>Chọn lớp và buổi học</h2>
+
+                        <p>
+                            Danh sách chỉ gồm các buổi thuộc lớp
+                            được phân công cho bạn.
+                        </p>
+                    </div>
+
+                </div>
+
+                @if (availableSessions.Any())
+                {
+                    <form method="get"
+                          action="@Url.Action("TeacherAttendance", "Home")"
+                          class="teacher-attendance-session-form">
+
+                        <div class="teacher-attendance-session-field">
+
+                            <label for="sessionId">
+                                Buổi học
+                            </label>
+
+                            @Html.DropDownList(
+                                "sessionId",
+                                sessionOptions,
+                                new
+                                {
+                                    @class = "form-select",
+                                    id = "sessionId"
+                                })
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary teacher-attendance-select-button">
+                            Xem danh sách
+                        </button>
+
+                    </form>
+                }
+                else
+                {
+                    <div class="teacher-empty-state">
+
+                        <div class="teacher-empty-icon">▦</div>
+
+                        <h3>Chưa có buổi học nào</h3>
+
+                        <p>
+                            Bạn chưa có buổi học được tạo trong các lớp
+                            đang phụ trách. Hãy liên hệ quản trị viên
+                            để kiểm tra lịch dạy.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+            @if (selectedSession != null)
+            {
+                var selectedClass = selectedSession.Class;
+
+                var courseName =
+                    selectedClass != null &&
+                    selectedClass.Course != null
+                    ? selectedClass.Course.CourseName
+                    : "Khóa học";
+
+                var roomName =
+                    !string.IsNullOrWhiteSpace(selectedSession.Room)
+                    ? selectedSession.Room
+                    : selectedClass != null
+                        ? selectedClass.Room
+                        : "Chưa cập nhật";
+
+                @* THÔNG TIN BUỔI HỌC *@
+                <section class="teacher-attendance-session-card">
+
+                    <div class="teacher-attendance-session-title">
+
+                        <span class="teacher-attendance-session-icon">
+                            ▦
+                        </span>
+
+                        <div>
+                            <span>BUỔI HỌC ĐANG CHỌN</span>
+
+                            <h2>@courseName</h2>
+
+                            <p>
+                                @(selectedClass != null
+                                    ? selectedClass.ClassName
+                                    : "Chưa cập nhật tên lớp")
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="teacher-attendance-session-details">
+
+                        <div>
+                            <span>Ngày học</span>
+                            <strong>
+                                @selectedSession.SessionDate.ToString("dd/MM/yyyy")
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Thời gian</span>
+                            <strong>
+                                @selectedSession.StartTime.ToString(@"hh\:mm")
+                                –
+                                @selectedSession.EndTime.ToString(@"hh\:mm")
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Phòng học</span>
+                            <strong>@roomName</strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                @* THỐNG KÊ ĐIỂM DANH *@
+                <section class="teacher-attendance-stats">
+
+                    <article class="teacher-attendance-stat">
+
+                        <span class="teacher-attendance-stat-icon">
+                            ◎
+                        </span>
+
+                        <div>
+                            <small>Tổng học viên</small>
+                            <strong>@students.Count</strong>
+                        </div>
+
+                    </article>
+
+                    <article class="teacher-attendance-stat">
+
+                        <span class="teacher-attendance-stat-icon attendance-icon-present">
+                            ✓
+                        </span>
+
+                        <div>
+                            <small>Có mặt</small>
+                            <strong>@presentCount</strong>
+                        </div>
+
+                    </article>
+
+                    <article class="teacher-attendance-stat">
+
+                        <span class="teacher-attendance-stat-icon attendance-icon-late">
+                            ◷
+                        </span>
+
+                        <div>
+                            <small>Đi muộn</small>
+                            <strong>@lateCount</strong>
+                        </div>
+
+                    </article>
+
+                    <article class="teacher-attendance-stat">
+
+                        <span class="teacher-attendance-stat-icon attendance-icon-absent">
+                            !
+                        </span>
+
+                        <div>
+                            <small>Vắng mặt</small>
+                            <strong>@absentCount</strong>
+                        </div>
+
+                    </article>
+
+                </section>
+
+                @* BẢNG ĐIỂM DANH *@
+                <section class="teacher-panel teacher-attendance-panel">
+
+                    <div class="teacher-panel-heading">
+
+                        <div>
+                            <span class="teacher-panel-eyebrow">
+                                STUDENT ROSTER
+                            </span>
+
+                            <h2>Danh sách điểm danh</h2>
+
+                            <p>
+                                Kiểm tra trạng thái của từng người
+                                trước khi lưu.
+                            </p>
+                        </div>
+
+                        <span class="teacher-attendance-count">
+                            @students.Count học viên
+                        </span>
+
+                    </div>
+
+                    @if (students.Any())
+                    {
+                        using (Html.BeginForm(
+                            "SaveTeacherAttendance",
+                            "Home",
+                            FormMethod.Post,
+                            new { @class = "teacher-attendance-form" }))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            @Html.HiddenFor(
+                                m => m.SelectedSessionId)
+
+                            <div class="teacher-attendance-table-wrapper">
+
+                                <table class="table teacher-attendance-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th class="attendance-col-number">#</th>
+                                            <th>Học viên</th>
+                                            <th>Tên đăng nhập</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ghi chú</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        @for (int i = 0; i < students.Count; i++)
+                                        {
+                                            var student = students[i];
+
+                                            <tr>
+
+                                                <td class="attendance-col-number">
+                                                    @(i + 1)
+                                                </td>
+
+                                                <td>
+                                                    <div class="teacher-attendance-student">
+
+                                                        <span class="teacher-attendance-student-avatar">
+                                                            @(
+                                                                !string.IsNullOrWhiteSpace(student.FullName)
+                                                                ? student.FullName.Substring(0, 1).ToUpper()
+                                                                : "H"
+                                                            )
+                                                        </span>
+
+                                                        <strong>
+                                                            @student.FullName
+                                                        </strong>
+
+                                                    </div>
+
+                                                    @Html.HiddenFor(
+                                                        m => m.Students[i].StudentId)
+
+                                                </td>
+
+                                                <td>
+                                                    <span class="teacher-attendance-username">
+                                                        @student.Username
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    @Html.DropDownListFor(
+                                                        m => m.Students[i].Status,
+                                                        statusOptions,
+                                                        "-- Chọn trạng thái --",
+                                                        new
+                                                        {
+                                                            @class = "form-select teacher-attendance-status",
+                                                            required = "required"
+                                                        })
+                                                </td>
+
+                                                <td>
+                                                    @Html.TextAreaFor(
+                                                        m => m.Students[i].Notes,
+                                                        new
+                                                        {
+                                                            @class = "form-control teacher-attendance-notes",
+                                                            rows = "2",
+                                                            maxlength = "255",
+                                                            placeholder = "Ghi chú (nếu có)"
+                                                        })
+                                                </td>
+
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="teacher-attendance-form-footer">
+
+                                <p>
+                                    Hãy kiểm tra trạng thái của tất cả
+                                    học viên trước khi lưu điểm danh.
+                                </p>
+
+                                <button type="submit"
+                                        class="btn btn-primary teacher-attendance-save-button">
+                                    Lưu điểm danh
+                                </button>
+
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="teacher-empty-state teacher-empty-state-compact">
+
+                            <div class="teacher-empty-icon">◎</div>
+
+                            <h3>Lớp chưa có học viên đủ điều kiện điểm danh</h3>
+
+                            <p>
+                                Danh sách chỉ bao gồm học viên có lượt ghi danh
+                                đã được xác nhận hoặc đang học/đã hoàn thành.
+                            </p>
+
+                        </div>
+                    }
+
+                </section>
+            }
+
+        </main>
+
+        <footer class="teacher-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Teacher Information System</span>
+        </footer>
+
+    </div>
+
+</div>

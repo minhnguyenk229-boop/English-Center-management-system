@@ -1,0 +1,544 @@
+﻿
+@model English_language_center_management_system.Models.Enrollment
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using English_language_center_management_system.Models
+
+@{
+    ViewBag.Title = "Chi tiết ghi danh";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var payments = ViewBag.Payments as IEnumerable<Payment>
+                   ?? Enumerable.Empty<Payment>();
+
+    var paymentRows = payments
+        .OrderByDescending(p => p.PaymentDate)
+        .ToList();
+
+    decimal totalRecorded = paymentRows.Sum(p => p.AmountPaid);
+
+    string enrollmentStatus = Model.Status ?? "";
+    string statusText = "Chưa xác định";
+    string statusClass = "enrollment-detail-status-default";
+
+    switch (enrollmentStatus)
+    {
+        case "Pending":
+            statusText = "Chờ duyệt";
+            statusClass = "enrollment-detail-status-pending";
+            break;
+
+        case "Approved":
+        case "Confirmed":
+            statusText = "Đã xác nhận";
+            statusClass = "enrollment-detail-status-approved";
+            break;
+
+        case "Active":
+        case "Studying":
+            statusText = "Đang học";
+            statusClass = "enrollment-detail-status-active";
+            break;
+
+        case "Completed":
+            statusText = "Hoàn thành";
+            statusClass = "enrollment-detail-status-completed";
+            break;
+
+        case "Rejected":
+        case "Cancelled":
+        case "Withdrawn":
+            statusText = "Đã từ chối / hủy";
+            statusClass = "enrollment-detail-status-cancelled";
+            break;
+    }
+
+    Func<string, string> paymentStatusLabel = status =>
+    {
+        switch (status)
+        {
+            case "Paid": return "Đã thanh toán";
+            case "Partial": return "Thanh toán một phần";
+            case "Pending": return "Chờ thanh toán";
+            default:
+                return String.IsNullOrWhiteSpace(status)
+                    ? "Chưa xác định" : status;
+        }
+    };
+
+    Func<string, string> paymentStatusClass = status =>
+    {
+        switch (status)
+        {
+            case "Paid": return "payment-detail-paid";
+            case "Partial": return "payment-detail-partial";
+            case "Pending": return "payment-detail-pending";
+            default: return "payment-detail-default";
+        }
+    };
+
+    Func<string, string> paymentMethodLabel = method =>
+    {
+        switch (method)
+        {
+            case "Cash": return "Tiền mặt";
+            case "Bank Transfer": return "Chuyển khoản";
+            case "Credit Card": return "Thẻ tín dụng";
+            default:
+                return String.IsNullOrWhiteSpace(method)
+                    ? "Chưa xác định" : method;
+        }
+    };
+}
+
+<div class="admin-enrollment-detail-page">
+
+    <!-- Header -->
+    <div class="admin-enrollment-detail-header">
+        <div>
+            <div class="enrollment-detail-eyebrow">
+                QUẢN LÝ ĐÀO TẠO
+            </div>
+
+            <h2>Chi tiết ghi danh</h2>
+
+            <p>
+                Thông tin đăng ký học, lớp học và lịch sử thanh toán.
+            </p>
+        </div>
+
+        <a href="@Url.Action("Index", "Enrollments")"
+           class="enrollment-detail-back">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="enrollment-detail-alert enrollment-detail-alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="enrollment-detail-alert enrollment-detail-alert-error">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Enrollment overview -->
+    <div class="enrollment-detail-hero">
+        <div class="enrollment-detail-hero-icon">
+            <i class="glyphicon glyphicon-list-alt"></i>
+        </div>
+
+        <div class="enrollment-detail-hero-main">
+            <span class="enrollment-detail-code">
+                MÃ GHI DANH #@Model.Id
+            </span>
+
+            <h3>
+                @(Model.Student != null
+                    ? Model.Student.FullName
+                    : "Chưa có thông tin học viên")
+            </h3>
+
+            <div class="enrollment-detail-hero-meta">
+                <span>
+                    <i class="glyphicon glyphicon-education"></i>
+
+                    @(Model.Class != null
+                        ? Model.Class.ClassName
+                        : "Chưa xác định lớp học")
+                </span>
+
+                <span>
+                    <i class="glyphicon glyphicon-calendar"></i>
+                    @Model.EnrollmentDate.ToString("dd/MM/yyyy HH:mm")
+                </span>
+            </div>
+        </div>
+
+        <div class="enrollment-detail-hero-status">
+            <span class="enrollment-detail-status @statusClass">
+                @statusText
+            </span>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="enrollment-detail-summary">
+
+        <div class="enrollment-detail-summary-card">
+            <div class="enrollment-detail-summary-icon summary-student">
+                <i class="glyphicon glyphicon-user"></i>
+            </div>
+
+            <div>
+                <span>Học viên</span>
+                <strong>
+                    @(Model.Student != null
+                        ? Model.Student.FullName
+                        : "Chưa xác định")
+                </strong>
+            </div>
+        </div>
+
+        <div class="enrollment-detail-summary-card">
+            <div class="enrollment-detail-summary-icon summary-class">
+                <i class="glyphicon glyphicon-education"></i>
+            </div>
+
+            <div>
+                <span>Lớp học</span>
+                <strong>
+                    @(Model.Class != null
+                        ? Model.Class.ClassName
+                        : "Chưa xác định")
+                </strong>
+            </div>
+        </div>
+
+        <div class="enrollment-detail-summary-card">
+            <div class="enrollment-detail-summary-icon summary-payment">
+                <i class="glyphicon glyphicon-credit-card"></i>
+            </div>
+
+            <div>
+                <span>Số lượt thanh toán</span>
+                <strong>@paymentRows.Count</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Student information -->
+    <div class="enrollment-detail-columns">
+
+        <div class="enrollment-detail-card">
+            <div class="enrollment-detail-card-heading">
+                <div class="enrollment-detail-section-icon student-section-icon">
+                    <i class="glyphicon glyphicon-user"></i>
+                </div>
+
+                <div>
+                    <h3>Thông tin học viên</h3>
+                    <p>Thông tin tài khoản đăng ký lớp học.</p>
+                </div>
+            </div>
+
+            @if (Model.Student != null)
+            {
+                <div class="enrollment-detail-student-profile">
+                    <div class="enrollment-detail-avatar">
+                        @(!String.IsNullOrWhiteSpace(Model.Student.FullName)
+                            ? Model.Student.FullName.Substring(0, 1).ToUpper()
+                            : "H")
+                    </div>
+
+                    <div>
+                        <strong>
+                            @(String.IsNullOrWhiteSpace(Model.Student.FullName)
+                                ? Model.Student.Username
+                                : Model.Student.FullName)
+                        </strong>
+
+                        <span>
+                            Tài khoản: @Model.Student.Username
+                        </span>
+                    </div>
+                </div>
+
+                <div class="enrollment-detail-info-list">
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Email</span>
+                        <strong class="enrollment-detail-break">
+                            @Model.Student.Email
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Số điện thoại</span>
+                        <strong>
+                            @(String.IsNullOrWhiteSpace(Model.Student.Phone)
+                                ? "Chưa cập nhật"
+                                : Model.Student.Phone)
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Mã học viên</span>
+                        <strong>#@Model.StudentId</strong>
+                    </div>
+
+                </div>
+            }
+            else
+            {
+                <div class="enrollment-detail-empty">
+                    Không có thông tin học viên.
+                </div>
+            }
+        </div>
+
+        <!-- Class and course information -->
+        <div class="enrollment-detail-card">
+            <div class="enrollment-detail-card-heading">
+                <div class="enrollment-detail-section-icon class-section-icon">
+                    <i class="glyphicon glyphicon-book"></i>
+                </div>
+
+                <div>
+                    <h3>Thông tin lớp học</h3>
+                    <p>Thông tin khóa học và người phụ trách.</p>
+                </div>
+            </div>
+
+            @if (Model.Class != null)
+            {
+                <div class="enrollment-detail-info-list">
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Tên lớp</span>
+                        <strong>@Model.Class.ClassName</strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Khóa học</span>
+                        <strong>
+                            @(Model.Class.Course != null
+                                ? Model.Class.Course.CourseName
+                                : "Chưa xác định")
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Trình độ</span>
+                        <strong>
+                            @(Model.Class.Course != null
+                                ? Model.Class.Course.Level
+                                : "Chưa xác định")
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Phòng học</span>
+                        <strong>
+                            @(String.IsNullOrWhiteSpace(Model.Class.Room)
+                                ? "Chưa xếp phòng"
+                                : Model.Class.Room)
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Giáo viên</span>
+                        <strong>
+                            @(Model.Class.Teacher != null
+                                ? (String.IsNullOrWhiteSpace(Model.Class.Teacher.FullName)
+                                    ? Model.Class.Teacher.Username
+                                    : Model.Class.Teacher.FullName)
+                                : "Chưa phân công")
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Học phí khóa học</span>
+                        <strong>
+                            @(Model.Class.Course != null
+                                ? String.Format(
+                                    "{0:N0} VNĐ",
+                                    Model.Class.Course.TuitionFee)
+                                : "Chưa xác định")
+                        </strong>
+                    </div>
+
+                    <div class="enrollment-detail-info-row">
+                        <span>Lịch học</span>
+                        <strong class="enrollment-detail-break">
+                            @(String.IsNullOrWhiteSpace(Model.Class.ScheduleDescription)
+                                ? "Chưa cập nhật"
+                                : Model.Class.ScheduleDescription)
+                        </strong>
+                    </div>
+
+                </div>
+            }
+            else
+            {
+                <div class="enrollment-detail-empty">
+                    Không có thông tin lớp học.
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!-- Enrollment status -->
+    <div class="enrollment-detail-card enrollment-detail-status-card">
+        <div class="enrollment-detail-card-heading">
+            <div class="enrollment-detail-section-icon status-section-icon">
+                <i class="glyphicon glyphicon-info-sign"></i>
+            </div>
+
+            <div>
+                <h3>Thông tin ghi danh</h3>
+                <p>Thông tin và trạng thái hiện tại của đăng ký.</p>
+            </div>
+        </div>
+
+        <div class="enrollment-detail-status-content">
+
+            <div class="enrollment-detail-info-row">
+                <span>Mã ghi danh</span>
+                <strong>#@Model.Id</strong>
+            </div>
+
+            <div class="enrollment-detail-info-row">
+                <span>Ngày ghi danh</span>
+                <strong>
+                    @Model.EnrollmentDate.ToString("dd/MM/yyyy HH:mm")
+                </strong>
+            </div>
+
+            <div class="enrollment-detail-info-row">
+                <span>Trạng thái</span>
+                <strong>
+                    <span class="enrollment-detail-status @statusClass">
+                        @statusText
+                    </span>
+                </strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Payment summary -->
+    <div class="enrollment-detail-payment-summary">
+        <div class="enrollment-detail-payment-icon">
+            <i class="glyphicon glyphicon-credit-card"></i>
+        </div>
+
+        <div class="enrollment-detail-payment-text">
+            <span>Tổng tiền trong lịch sử thanh toán</span>
+            <strong>@totalRecorded.ToString("N0") VNĐ</strong>
+            <small>
+                Tổng số tiền ghi nhận từ @paymentRows.Count giao dịch.
+                Số liệu này không tự xác nhận rằng mọi giao dịch đã hoàn tất.
+            </small>
+        </div>
+    </div>
+
+    <!-- Payment history -->
+    <div class="enrollment-detail-card enrollment-detail-payments">
+        <div class="enrollment-detail-card-heading">
+            <div>
+                <h3>Lịch sử thanh toán</h3>
+                <p>
+                    Các giao dịch được ghi nhận cho lượt ghi danh này.
+                </p>
+            </div>
+
+            <span class="enrollment-detail-payment-count">
+                @paymentRows.Count giao dịch
+            </span>
+        </div>
+
+        @if (paymentRows.Any())
+        {
+            <div class="enrollment-detail-table-wrap">
+                <table class="enrollment-detail-table">
+
+                    <thead>
+                        <tr>
+                            <th>Mã giao dịch</th>
+                            <th>Mã biên lai</th>
+                            <th>Ngày thanh toán</th>
+                            <th>Phương thức</th>
+                            <th>Số tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var payment in paymentRows)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="enrollment-detail-payment-id">
+                                        #@payment.Id
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong class="enrollment-detail-receipt">
+                                        @(String.IsNullOrWhiteSpace(payment.ReceiptNumber)
+                                            ? "Chưa có mã biên lai"
+                                            : payment.ReceiptNumber)
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @payment.PaymentDate.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    @paymentMethodLabel(payment.PaymentMethod)
+                                </td>
+
+                                <td>
+                                    <strong class="enrollment-detail-payment-amount">
+                                        @payment.AmountPaid.ToString("N0") VNĐ
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <span class="enrollment-detail-payment-status @paymentStatusClass(payment.PaymentStatus)">
+                                        @paymentStatusLabel(payment.PaymentStatus)
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="enrollment-detail-empty enrollment-detail-empty-large">
+                <i class="glyphicon glyphicon-credit-card"></i>
+
+                <strong>Chưa có giao dịch thanh toán</strong>
+
+                <span>
+                    Lịch sử thanh toán sẽ hiển thị ở đây khi có giao dịch
+                    được ghi nhận cho lượt ghi danh.
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- Actions -->
+    <div class="enrollment-detail-actions">
+
+        <a href="@Url.Action("Index", "Enrollments")"
+           class="enrollment-detail-action enrollment-detail-action-secondary">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            Quay lại danh sách
+        </a>
+
+        <a href="@Url.Action("Edit", "Enrollments", new { id = Model.Id })"
+           class="enrollment-detail-action enrollment-detail-action-primary">
+            <i class="glyphicon glyphicon-edit"></i>
+            Chỉnh sửa ghi danh
+        </a>
+
+    </div>
+
+</div>

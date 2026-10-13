@@ -1,0 +1,384 @@
+﻿
+@model English_language_center_management_system.Models.Payment
+
+@using System
+
+@{
+    ViewBag.Title = "Chi tiết thanh toán";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var studentName = Model.Enrollment != null &&
+                      Model.Enrollment.Student != null
+        ? (String.IsNullOrWhiteSpace(Model.Enrollment.Student.FullName)
+            ? Model.Enrollment.Student.Username
+            : Model.Enrollment.Student.FullName)
+        : "Chưa có thông tin học viên";
+
+    var className = Model.Enrollment != null &&
+                    Model.Enrollment.Class != null
+        ? Model.Enrollment.Class.ClassName
+        : "Chưa có thông tin lớp";
+
+    var courseName = Model.Enrollment != null &&
+                     Model.Enrollment.Class != null &&
+                     Model.Enrollment.Class.Course != null
+        ? Model.Enrollment.Class.Course.CourseName
+        : "Chưa có thông tin khóa học";
+
+    decimal tuitionFee = Model.Enrollment != null &&
+                         Model.Enrollment.Class != null &&
+                         Model.Enrollment.Class.Course != null
+        ? Model.Enrollment.Class.Course.TuitionFee
+        : 0;
+
+    decimal remainingBalance = Math.Max(tuitionFee - Model.AmountPaid, 0);
+
+    var statusText = "Chưa xác định";
+    var statusClass = "payment-details-status-default";
+
+    switch (Model.PaymentStatus)
+    {
+        case "Paid":
+            statusText = "Đã thanh toán";
+            statusClass = "payment-details-status-paid";
+            break;
+
+        case "Completed":
+            statusText = "Hoàn tất";
+            statusClass = "payment-details-status-paid";
+            break;
+
+        case "Partial":
+            statusText = "Thanh toán một phần";
+            statusClass = "payment-details-status-partial";
+            break;
+
+        case "Pending":
+            statusText = "Chờ thanh toán";
+            statusClass = "payment-details-status-pending";
+            break;
+
+        default:
+            statusText = String.IsNullOrWhiteSpace(Model.PaymentStatus)
+                ? "Chưa xác định"
+                : Model.PaymentStatus;
+            break;
+    }
+
+    var methodText = Model.PaymentMethod;
+
+    switch (Model.PaymentMethod)
+    {
+        case "Cash":
+            methodText = "Tiền mặt";
+            break;
+
+        case "Bank Transfer":
+            methodText = "Chuyển khoản";
+            break;
+
+        case "Credit Card":
+            methodText = "Thẻ tín dụng";
+            break;
+
+        default:
+            methodText = String.IsNullOrWhiteSpace(Model.PaymentMethod)
+                ? "Chưa xác định"
+                : Model.PaymentMethod;
+            break;
+    }
+}
+
+<div class="admin-payment-details-page">
+
+    <!-- Header -->
+    <div class="payment-details-header">
+        <div>
+            <div class="payment-details-eyebrow">
+                QUẢN LÝ TÀI CHÍNH
+            </div>
+
+            <h2>Chi tiết thanh toán</h2>
+
+            <p>
+                Xem thông tin giao dịch, học viên và biên lai thu tiền.
+            </p>
+        </div>
+
+        <a href="@Url.Action("Index", "Payments")"
+           class="payment-details-back">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Payment hero -->
+    <div class="payment-details-hero">
+
+        <div class="payment-details-hero-icon">
+            <i class="glyphicon glyphicon-credit-card"></i>
+        </div>
+
+        <div class="payment-details-hero-content">
+            <span class="payment-details-code">
+                GIAO DỊCH #@Model.Id
+            </span>
+
+            <h3>
+                @String.Format("{0:N0} VNĐ", Model.AmountPaid)
+            </h3>
+
+            <p>
+                <i class="glyphicon glyphicon-file"></i>
+                Biên lai: @Model.ReceiptNumber
+            </p>
+        </div>
+
+        <div class="payment-details-hero-status">
+            <span class="payment-details-status @statusClass">
+                @statusText
+            </span>
+        </div>
+
+    </div>
+
+    <!-- Summary -->
+    <div class="payment-details-summary">
+
+        <div class="payment-details-summary-card">
+            <div class="payment-details-summary-icon summary-received">
+                <i class="glyphicon glyphicon-usd"></i>
+            </div>
+
+            <div>
+                <span>Số tiền giao dịch</span>
+                <strong>@Model.AmountPaid.ToString("N0") VNĐ</strong>
+            </div>
+        </div>
+
+        <div class="payment-details-summary-card">
+            <div class="payment-details-summary-icon summary-tuition">
+                <i class="glyphicon glyphicon-book"></i>
+            </div>
+
+            <div>
+                <span>Học phí khóa học</span>
+                <strong>@tuitionFee.ToString("N0") VNĐ</strong>
+            </div>
+        </div>
+
+        <div class="payment-details-summary-card">
+            <div class="payment-details-summary-icon summary-balance">
+                <i class="glyphicon glyphicon-stats"></i>
+            </div>
+
+            <div>
+                <span>Dư nợ ước tính</span>
+                <strong>@remainingBalance.ToString("N0") VNĐ</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Student information -->
+    <div class="payment-details-columns">
+
+        <div class="payment-details-card">
+
+            <div class="payment-details-card-heading">
+                <div class="payment-details-section-icon icon-student">
+                    <i class="glyphicon glyphicon-user"></i>
+                </div>
+
+                <div>
+                    <h3>Thông tin học viên</h3>
+                    <p>Người được ghi nhận thanh toán.</p>
+                </div>
+            </div>
+
+            <div class="payment-details-info-list">
+
+                <div class="payment-details-info-row">
+                    <span>Họ và tên</span>
+                    <strong>@studentName</strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Tài khoản</span>
+                    <strong>
+                        @(Model.Enrollment != null &&
+                          Model.Enrollment.Student != null
+                            ? Model.Enrollment.Student.Username
+                            : "Chưa xác định")
+                    </strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Email</span>
+                    <strong class="payment-details-break">
+                        @(Model.Enrollment != null &&
+                          Model.Enrollment.Student != null &&
+                          !String.IsNullOrWhiteSpace(Model.Enrollment.Student.Email)
+                            ? Model.Enrollment.Student.Email
+                            : "Chưa cập nhật")
+                    </strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Mã ghi danh</span>
+                    <strong>
+                        @(Model.Enrollment != null
+                            ? "#" + Model.Enrollment.Id
+                            : "Không xác định")
+                    </strong>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Course information -->
+        <div class="payment-details-card">
+
+            <div class="payment-details-card-heading">
+                <div class="payment-details-section-icon icon-course">
+                    <i class="glyphicon glyphicon-education"></i>
+                </div>
+
+                <div>
+                    <h3>Thông tin khóa học</h3>
+                    <p>Lớp học liên quan đến giao dịch.</p>
+                </div>
+            </div>
+
+            <div class="payment-details-info-list">
+
+                <div class="payment-details-info-row">
+                    <span>Tên khóa học</span>
+                    <strong>@courseName</strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Tên lớp</span>
+                    <strong>@className</strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Phòng học</span>
+                    <strong>
+                        @(Model.Enrollment != null &&
+                          Model.Enrollment.Class != null &&
+                          !String.IsNullOrWhiteSpace(Model.Enrollment.Class.Room)
+                            ? Model.Enrollment.Class.Room
+                            : "Chưa xếp phòng")
+                    </strong>
+                </div>
+
+                <div class="payment-details-info-row">
+                    <span>Học phí</span>
+                    <strong>@tuitionFee.ToString("N0") VNĐ</strong>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Transaction details -->
+    <div class="payment-details-card payment-details-transaction">
+
+        <div class="payment-details-card-heading">
+            <div class="payment-details-section-icon icon-transaction">
+                <i class="glyphicon glyphicon-list-alt"></i>
+            </div>
+
+            <div>
+                <h3>Thông tin giao dịch</h3>
+                <p>Thông tin được lưu trong hệ thống.</p>
+            </div>
+        </div>
+
+        <div class="payment-details-info-list">
+
+            <div class="payment-details-info-row">
+                <span>Mã giao dịch</span>
+                <strong>#@Model.Id</strong>
+            </div>
+
+            <div class="payment-details-info-row">
+                <span>Mã biên lai</span>
+                <strong class="payment-details-break">
+                    @Model.ReceiptNumber
+                </strong>
+            </div>
+
+            <div class="payment-details-info-row">
+                <span>Ngày thanh toán</span>
+                <strong>
+                    @Model.PaymentDate.ToString("dd/MM/yyyy HH:mm")
+                </strong>
+            </div>
+
+            <div class="payment-details-info-row">
+                <span>Phương thức thanh toán</span>
+                <strong>@methodText</strong>
+            </div>
+
+            <div class="payment-details-info-row">
+                <span>Trạng thái thanh toán</span>
+                <strong>
+                    <span class="payment-details-status @statusClass">
+                        @statusText
+                    </span>
+                </strong>
+            </div>
+
+            <div class="payment-details-info-row">
+                <span>Số tiền giao dịch</span>
+                <strong class="payment-details-money">
+                    @Model.AmountPaid.ToString("N0") VNĐ
+                </strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notice -->
+    <div class="payment-details-notice">
+        <i class="glyphicon glyphicon-info-sign"></i>
+
+        <div>
+            <strong>Lưu ý về số dư</strong>
+
+            <p>
+                Dư nợ ước tính ở đây được tính bằng học phí khóa học
+                trừ số tiền của giao dịch này. Nếu có các khoản thu khác,
+                cần đối chiếu toàn bộ lịch sử thanh toán trước khi xác định
+                số dư thực tế.
+            </p>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="payment-details-actions">
+
+        <a href="@Url.Action("Index", "Payments")"
+           class="payment-details-btn payment-details-btn-secondary">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            Quay lại
+        </a>
+
+        <a href="@Url.Action("Edit", "Payments", new { id = Model.Id })"
+           class="payment-details-btn payment-details-btn-edit">
+            <i class="glyphicon glyphicon-edit"></i>
+            Sửa giao dịch
+        </a>
+
+        <a href="@Url.Action("Receipt", "Payments", new { id = Model.Id })"
+           class="payment-details-btn payment-details-btn-print">
+            <i class="glyphicon glyphicon-print"></i>
+            Xem và in biên lai
+        </a>
+
+    </div>
+
+</div>

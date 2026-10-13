@@ -1,0 +1,275 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+@using English_language_center_management_system.Models
+@using English_language_center_management_system.Models.ViewModels.Home
+
+@model TeacherSubmissionsViewModel
+
+@{
+    ViewBag.Title = "Bài nộp học viên";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    var classes = Model.AvailableClasses ?? new List<Class>();
+
+    var assignments = Model.AvailableAssignments
+        ?? new List<Assignment>();
+
+    var submissions = Model.Submissions
+        ?? new List<TeacherSubmissionRowViewModel>();
+
+    var classOptions = classes.Select(c => new SelectListItem
+    {
+        Value = c.Id.ToString(),
+        Text = c.ClassName,
+        Selected = Model.SelectedClassId.HasValue
+            && Model.SelectedClassId.Value == c.Id
+    }).ToList();
+
+    var assignmentOptions = assignments.Select(a => new SelectListItem
+    {
+        Value = a.Id.ToString(),
+        Text = a.Title,
+        Selected = Model.SelectedAssignmentId.HasValue
+            && Model.SelectedAssignmentId.Value == a.Id
+    }).ToList();
+}
+
+<div class="teacher-submissions-page">
+
+    <div class="teacher-submissions-header">
+        <div>
+            <div class="teacher-submissions-eyebrow">TEACHER PORTAL</div>
+            <h1>Bài nộp học viên</h1>
+            <p>Xem bài làm, chấm điểm và theo dõi tình trạng nộp bài.</p>
+        </div>
+
+        <a href="@Url.Action("TeacherDashboard", "Home")"
+           class="teacher-submissions-back">
+            ← Quay lại tổng quan
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="teacher-submissions-alert success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="teacher-submissions-alert error">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="teacher-submissions-filter-card">
+        @using (Html.BeginForm(
+            "TeacherSubmissions",
+            "Home",
+            FormMethod.Get,
+            new { @class = "teacher-submissions-filter" }))
+        {
+            <div class="teacher-submissions-filter-field">
+                <label for="classId">Lớp học</label>
+
+                @Html.DropDownList(
+                    "classId",
+                    classOptions,
+                    "-- Chọn lớp --",
+                    new
+                    {
+                        id = "classId",
+                        @class = "teacher-submissions-select",
+                        onchange = "this.form.assignmentId.value=''; this.form.submit();"
+                    })
+            </div>
+
+            <div class="teacher-submissions-filter-field">
+                <label for="assignmentId">Bài tập</label>
+
+                @Html.DropDownList(
+                    "assignmentId",
+                    assignmentOptions,
+                    "Tất cả bài tập",
+                    new
+                    {
+                        id = "assignmentId",
+                        @class = "teacher-submissions-select",
+                        onchange = "this.form.submit();"
+                    })
+            </div>
+
+            <noscript>
+                <button type="submit" class="teacher-submissions-btn">
+                    Lọc bài nộp
+                </button>
+            </noscript>
+        }
+    </div>
+
+    @if (Model.SelectedClass == null)
+    {
+        <div class="teacher-submissions-empty">
+            <h3>Chưa có lớp được phân công</h3>
+            <p>Bạn cần được phân công lớp trước khi xem bài nộp.</p>
+        </div>
+    }
+    else
+    {
+        <div class="teacher-submissions-stats">
+            <div>
+                <span>Lớp hiện tại</span>
+                <strong>@Model.SelectedClass.ClassName</strong>
+            </div>
+
+            <div>
+                <span>Số bài tập</span>
+                <strong>@assignments.Count</strong>
+            </div>
+
+            <div>
+                <span>Số bài nộp đang hiển thị</span>
+                <strong>@submissions.Count</strong>
+            </div>
+        </div>
+
+        if (assignments.Count == 0)
+        {
+            <div class="teacher-submissions-empty">
+                <h3>Lớp chưa có bài tập</h3>
+                <p>Hiện chưa có bài tập nào được tạo cho lớp này.</p>
+            </div>
+        }
+        else if (submissions.Count == 0)
+        {
+            <div class="teacher-submissions-empty">
+                <h3>Chưa có bài nộp</h3>
+                <p>Chưa tìm thấy bài nộp phù hợp với bộ lọc hiện tại.</p>
+            </div>
+        }
+        else
+        {
+            using (Html.BeginForm(
+                "SaveSubmissionGrades",
+                "Home",
+                FormMethod.Post,
+                new { @class = "teacher-submissions-form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.SelectedClassId)
+                @Html.HiddenFor(m => m.SelectedAssignmentId)
+
+                <div class="teacher-submissions-table-heading">
+                    <div>
+                        <h2>Danh sách bài đã nộp</h2>
+                        <p>Điểm bài tập dùng thang điểm từ 0 đến 10.</p>
+                    </div>
+
+                    <button type="submit" class="teacher-submissions-btn">
+                        Lưu điểm
+                    </button>
+                </div>
+
+                <div class="teacher-submissions-table-wrap">
+                    <table class="teacher-submissions-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Học viên</th>
+                                <th>Bài tập</th>
+                                <th>Hạn nộp</th>
+                                <th>Thời gian nộp</th>
+                                <th>Bài làm</th>
+                                <th>Điểm</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @for (int i = 0; i < submissions.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i + 1)</td>
+
+                                    <td>
+                                        @Html.HiddenFor(
+                                            m => m.Submissions[i].SubmissionId)
+
+                                        <div class="teacher-submissions-student">
+                                            @submissions[i].StudentName
+                                        </div>
+
+                                        <div class="teacher-submissions-username">
+                                            @submissions[i].StudentUsername
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            @submissions[i].AssignmentTitle
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @(submissions[i].DueDate == DateTime.MinValue
+                                            ? "Chưa cập nhật"
+                                            : submissions[i].DueDate.ToString("dd/MM/yyyy HH:mm"))
+                                    </td>
+
+                                    <td>
+                                        @submissions[i].SubmittedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            submissions[i].FileUrl))
+                                        {
+                                            <a class="teacher-submissions-file-link"
+                                               href="@submissions[i].FileUrl"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
+                                                Mở bài làm ↗
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="teacher-submissions-invalid-link">
+                                                Liên kết không hợp lệ
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(
+                                            m => m.Submissions[i].Grade,
+                                            "{0:0.##}",
+                                            new
+                                            {
+                                                @class = "teacher-submissions-grade",
+                                                type = "number",
+                                                min = "0",
+                                                max = "10",
+                                                step = "0.01",
+                                                placeholder = "0–10"
+                                            })
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="teacher-submissions-footer">
+                    <span>
+                        Nhập điểm rồi nhấn Lưu điểm. Để trống điểm sẽ xóa điểm đã lưu của bài đó.
+                    </span>
+
+                    <button type="submit" class="teacher-submissions-btn">
+                        Lưu điểm
+                    </button>
+                </div>
+            }
+        }
+    }
+</div>

@@ -1,0 +1,220 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Courses.CourseCatalogViewModel
+
+@{
+    ViewBag.Title = "Danh mục khóa học";
+
+    var levels = new[]
+    {
+        "Beginner",
+        "Elementary",
+        "Intermediate",
+        "Upper Intermediate",
+        "Advanced",
+        "IELTS/TOEIC preparation"
+    };
+}
+
+<div class="catalog-page">
+
+    @* PHẦN GIỚI THIỆU *@
+    <section class="catalog-hero">
+        <span class="eyebrow">ENGLISH CENTER · OUR COURSES</span>
+
+        <h1>Khám phá khóa học tiếng Anh</h1>
+
+        <p>
+            Tìm chương trình học phù hợp với trình độ,
+            mục tiêu và ngân sách của bạn.
+        </p>
+
+        <div class="catalog-highlights">
+            <span>✓ Nhiều trình độ</span>
+            <span>✓ Thông tin học phí rõ ràng</span>
+            <span>✓ Lựa chọn lớp học phù hợp</span>
+        </div>
+    </section>
+
+    @* THÔNG BÁO *@
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @* TÌM KIẾM VÀ LỌC *@
+    <section class="catalog-toolbar">
+
+        <div class="catalog-toolbar-heading">
+            <div>
+                <h2>Tìm khóa học</h2>
+                <p>Lọc danh sách theo tên hoặc trình độ của bạn.</p>
+            </div>
+        </div>
+
+        @using (Html.BeginForm(
+            "Index",
+            "Courses",
+            FormMethod.Get,
+            new { @class = "catalog-search-form" }))
+        {
+            <div class="catalog-filter-field">
+                <label for="searchTerm">Tên khóa học</label>
+
+                <input type="text"
+                       id="searchTerm"
+                       name="searchTerm"
+                       value="@Model.SearchTerm"
+                       class="form-control"
+                       placeholder="Ví dụ: Tiếng Anh giao tiếp..." />
+            </div>
+
+            <div class="catalog-filter-field">
+                <label for="level">Trình độ</label>
+
+                <select id="level"
+                        name="level"
+                        class="form-select">
+
+                    <option value="">Tất cả trình độ</option>
+
+                    @foreach (var item in levels)
+                    {
+                        if (Model.SelectedLevel == item)
+                        {
+                            <option value="@item" selected="selected">
+                                @item
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@item">@item</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="catalog-filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    Tìm khóa học
+                </button>
+
+                @Html.ActionLink(
+                    "Xóa bộ lọc",
+                    "Index",
+                    "Courses",
+                    null,
+                    new { @class = "btn btn-outline-secondary" }
+                )
+            </div>
+        }
+
+    </section>
+
+    @* DANH SÁCH KHÓA HỌC *@
+    <section class="catalog-results">
+
+        <div class="catalog-results-heading">
+            <div>
+                <h2>Danh sách khóa học</h2>
+
+                <p>
+                    Chọn khóa học để xem nội dung và các lớp đang mở.
+                </p>
+            </div>
+
+            @if (Model.Courses != null)
+            {
+                <span class="catalog-count">
+                    @Model.Courses.Count khóa học
+                </span>
+            }
+        </div>
+
+        @if (Model.Courses != null && Model.Courses.Any())
+        {
+            <div class="courses-grid">
+
+                @foreach (var course in Model.Courses)
+                {
+                    <article class="course-card">
+
+                        <div class="course-cover">
+                            <span>@course.Level</span>
+                        </div>
+
+                        <div class="course-card-body">
+
+                            <span class="course-level">
+                                @course.Level
+                            </span>
+
+                            <h3>@course.CourseName</h3>
+
+                            <p class="course-description">
+                                @(
+                                    string.IsNullOrWhiteSpace(course.Description)
+                                    ? "Thông tin chi tiết về chương trình học sẽ được cập nhật."
+                                    : course.Description
+                                )
+                            </p>
+
+                            <div class="course-meta">
+                                <span>
+                                    ⏱ @course.Duration giờ học
+                                </span>
+                            </div>
+
+                            <div class="course-price">
+                                @course.TuitionFee.ToString("N0") VNĐ
+                            </div>
+
+                            <div class="course-card-action">
+                                @Html.ActionLink(
+                                    "Xem chi tiết →",
+                                    "Details",
+                                    "Courses",
+                                    new { id = course.Id },
+                                    new { @class = "btn btn-outline-primary w-100" }
+                                )
+                            </div>
+
+                        </div>
+
+                    </article>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="catalog-empty">
+                <div class="catalog-empty-icon">⌕</div>
+
+                <h3>Chưa tìm thấy khóa học phù hợp</h3>
+
+                <p>
+                    Hãy thử từ khóa khác hoặc chọn tất cả trình độ.
+                </p>
+
+                @Html.ActionLink(
+                    "Xem tất cả khóa học",
+                    "Index",
+                    "Courses",
+                    null,
+                    new { @class = "btn btn-outline-primary" }
+                )
+            </div>
+        }
+
+    </section>
+
+</div>

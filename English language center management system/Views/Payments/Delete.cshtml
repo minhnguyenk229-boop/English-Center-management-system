@@ -1,0 +1,337 @@
+﻿
+@model English_language_center_management_system.Models.Payment
+
+@using System
+
+@{
+    ViewBag.Title = "Xác nhận xóa thanh toán";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var studentName =
+        Model.Enrollment != null && Model.Enrollment.Student != null
+        ? (String.IsNullOrWhiteSpace(Model.Enrollment.Student.FullName)
+            ? Model.Enrollment.Student.Username
+            : Model.Enrollment.Student.FullName)
+        : "Chưa có thông tin học viên";
+
+    var studentUsername =
+        Model.Enrollment != null && Model.Enrollment.Student != null
+        ? Model.Enrollment.Student.Username
+        : "Chưa xác định";
+
+    var studentEmail =
+        Model.Enrollment != null && Model.Enrollment.Student != null
+        ? Model.Enrollment.Student.Email
+        : "Chưa cập nhật";
+
+    var className =
+        Model.Enrollment != null && Model.Enrollment.Class != null
+        ? Model.Enrollment.Class.ClassName
+        : "Chưa có thông tin lớp học";
+
+    var courseName =
+        Model.Enrollment != null &&
+        Model.Enrollment.Class != null &&
+        Model.Enrollment.Class.Course != null
+        ? Model.Enrollment.Class.Course.CourseName
+        : "Chưa xác định";
+
+    var roomName =
+        Model.Enrollment != null &&
+        Model.Enrollment.Class != null &&
+        !String.IsNullOrWhiteSpace(Model.Enrollment.Class.Room)
+        ? Model.Enrollment.Class.Room
+        : "Chưa xếp phòng";
+
+    var statusText = "Chưa xác định";
+    var statusClass = "payment-delete-status-default";
+
+    switch (Model.PaymentStatus)
+    {
+        case "Paid":
+            statusText = "Đã thanh toán";
+            statusClass = "payment-delete-status-paid";
+            break;
+
+        case "Completed":
+            statusText = "Hoàn tất";
+            statusClass = "payment-delete-status-paid";
+            break;
+
+        case "Partial":
+            statusText = "Thanh toán một phần";
+            statusClass = "payment-delete-status-partial";
+            break;
+
+        case "Pending":
+            statusText = "Chờ thanh toán";
+            statusClass = "payment-delete-status-pending";
+            break;
+
+        default:
+            statusText = String.IsNullOrWhiteSpace(Model.PaymentStatus)
+                ? "Chưa xác định"
+                : Model.PaymentStatus;
+            break;
+    }
+
+    var methodText = Model.PaymentMethod;
+
+    switch (Model.PaymentMethod)
+    {
+        case "Cash":
+            methodText = "Tiền mặt";
+            break;
+
+        case "Bank Transfer":
+            methodText = "Chuyển khoản";
+            break;
+
+        case "Credit Card":
+            methodText = "Thẻ tín dụng";
+            break;
+
+        default:
+            methodText = String.IsNullOrWhiteSpace(Model.PaymentMethod)
+                ? "Chưa xác định"
+                : Model.PaymentMethod;
+            break;
+    }
+}
+
+<div class="admin-payment-delete-page">
+
+    <!-- Header -->
+    <div class="payment-delete-header">
+        <div>
+            <div class="payment-delete-eyebrow">
+                QUẢN LÝ TÀI CHÍNH
+            </div>
+
+            <h2>Xác nhận xóa giao dịch</h2>
+
+            <p>
+                Kiểm tra thông tin biên lai trước khi xác nhận xóa.
+            </p>
+        </div>
+
+        <div class="payment-delete-header-icon">
+            <i class="glyphicon glyphicon-trash"></i>
+        </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="payment-delete-card">
+
+        <!-- Warning -->
+        <div class="payment-delete-warning">
+            <div class="payment-delete-warning-icon">
+                <i class="glyphicon glyphicon-exclamation-sign"></i>
+            </div>
+
+            <div>
+                <h3>Bạn đang chuẩn bị xóa giao dịch thanh toán</h3>
+
+                <p>
+                    Vui lòng kiểm tra số tiền, học viên và mã biên lai.
+                    Đây là thao tác ảnh hưởng đến lịch sử thu học phí
+                    được lưu trong hệ thống.
+                </p>
+            </div>
+        </div>
+
+        <!-- Payment overview -->
+        <div class="payment-delete-profile">
+
+            <div class="payment-delete-profile-icon">
+                <i class="glyphicon glyphicon-credit-card"></i>
+            </div>
+
+            <div class="payment-delete-profile-info">
+                <span class="payment-delete-record-code">
+                    GIAO DỊCH #@Model.Id
+                </span>
+
+                <h3>@Model.ReceiptNumber</h3>
+
+                <p>
+                    <i class="glyphicon glyphicon-user"></i>
+                    @studentName
+                </p>
+            </div>
+
+            <div class="payment-delete-profile-status">
+                <span class="payment-delete-status @statusClass">
+                    @statusText
+                </span>
+            </div>
+        </div>
+
+        <!-- Amount -->
+        <div class="payment-delete-amount-box">
+            <span>SỐ TIỀN GIAO DỊCH</span>
+
+            <strong>
+                @Model.AmountPaid.ToString("N0") VNĐ
+            </strong>
+
+            <small>
+                Ngày giao dịch:
+                @Model.PaymentDate.ToString("dd/MM/yyyy HH:mm")
+            </small>
+        </div>
+
+        <!-- Transaction information -->
+        <div class="payment-delete-section">
+
+            <h4>
+                <i class="glyphicon glyphicon-list-alt"></i>
+                Thông tin giao dịch
+            </h4>
+
+            <div class="payment-delete-details">
+
+                <div class="payment-delete-detail">
+                    <span>Mã giao dịch</span>
+                    <strong>#@Model.Id</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Mã biên lai</span>
+                    <strong class="payment-delete-break">
+                        @Model.ReceiptNumber
+                    </strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Phương thức thanh toán</span>
+                    <strong>@methodText</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Trạng thái thanh toán</span>
+                    <strong>@statusText</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Ngày thanh toán</span>
+                    <strong>
+                        @Model.PaymentDate.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Số tiền</span>
+                    <strong class="payment-delete-money">
+                        @Model.AmountPaid.ToString("N0") VNĐ
+                    </strong>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Student and class -->
+        <div class="payment-delete-section">
+
+            <h4>
+                <i class="glyphicon glyphicon-education"></i>
+                Thông tin học viên và lớp học
+            </h4>
+
+            <div class="payment-delete-details">
+
+                <div class="payment-delete-detail">
+                    <span>Học viên</span>
+                    <strong>@studentName</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Tài khoản</span>
+                    <strong>@studentUsername</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Email</span>
+                    <strong class="payment-delete-break">
+                        @studentEmail
+                    </strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Lớp học</span>
+                    <strong>@className</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Khóa học</span>
+                    <strong>@courseName</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Phòng học</span>
+                    <strong>@roomName</strong>
+                </div>
+
+                <div class="payment-delete-detail">
+                    <span>Mã ghi danh</span>
+                    <strong>
+                        @(Model.Enrollment != null
+                            ? "#" + Model.Enrollment.Id
+                            : "Chưa xác định")
+                    </strong>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Important warning -->
+        <div class="payment-delete-notice">
+            <i class="glyphicon glyphicon-info-sign"></i>
+
+            <div>
+                <strong>Lưu ý quan trọng</strong>
+
+                <p>
+                    Theo Controller hiện tại, khi xác nhận xóa,
+                    giao dịch sẽ bị xóa khỏi bảng thanh toán.
+                    Hệ thống chưa tự khôi phục trạng thái ghi danh
+                    hoặc lưu bản sao giao dịch đã xóa.
+                </p>
+
+                <p>
+                    Nếu cần giữ lịch sử tài chính để đối soát,
+                    hãy cân nhắc không xóa giao dịch thật.
+                </p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        @using (Html.BeginForm(
+            "Delete",
+            "Payments",
+            new { id = Model.Id },
+            FormMethod.Post,
+            new { @class = "payment-delete-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="payment-delete-actions">
+
+                <a href="@Url.Action("Index", "Payments")"
+                   class="payment-delete-btn payment-delete-cancel">
+                    <i class="glyphicon glyphicon-arrow-left"></i>
+                    Hủy và quay lại
+                </a>
+
+                <button type="submit"
+                        class="payment-delete-btn payment-delete-submit"
+                        onclick="return confirm('Bạn có chắc chắn muốn xóa giao dịch #@Model.Id và biên lai @Model.ReceiptNumber không?');">
+                    <i class="glyphicon glyphicon-trash"></i>
+                    Xác nhận xóa giao dịch
+                </button>
+
+            </div>
+        }
+
+    </div>
+</div>

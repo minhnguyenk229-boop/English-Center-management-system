@@ -1,0 +1,928 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Payments.PaymentIndexViewModel
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+@using English_language_center_management_system.Models.ViewModels.Payments
+
+@{
+    ViewBag.Title = "Quản lý thanh toán";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var items = Model != null && Model.Payments != null
+        ? Model.Payments.Where(x => x != null && x.Payment != null).ToList()
+        : new List<PaymentIndexItemViewModel>();
+
+    int totalCount = items.Count;
+
+    int paidCount = items.Count(x =>
+        x.Payment.PaymentStatus == "Paid" ||
+        x.Payment.PaymentStatus == "Completed");
+
+    int partialCount = items.Count(x =>
+        x.Payment.PaymentStatus == "Partial");
+
+    int pendingCount = items.Count(x =>
+        x.Payment.PaymentStatus == "Pending");
+
+    decimal paidTotal = items
+        .Where(x =>
+            x.Payment.PaymentStatus == "Paid" ||
+            x.Payment.PaymentStatus == "Completed")
+        .Sum(x => x.Payment.AmountPaid);
+
+    decimal partialTotal = items
+        .Where(x => x.Payment.PaymentStatus == "Partial")
+        .Sum(x => x.Payment.AmountPaid);
+
+    decimal totalRecorded = items.Sum(x => x.Payment.AmountPaid);
+
+    var statusOptions = new List<SelectListItem>
+{
+        new SelectListItem
+        {
+            Value = "Paid",
+            Text = "Đã thanh toán",
+            Selected = Model.SelectedStatus == "Paid"
+        },
+        new SelectListItem
+        {
+            Value = "Completed",
+            Text = "Hoàn tất",
+            Selected = Model.SelectedStatus == "Completed"
+        },
+        new SelectListItem
+        {
+            Value = "Partial",
+            Text = "Thanh toán một phần",
+            Selected = Model.SelectedStatus == "Partial"
+        },
+        new SelectListItem
+        {
+            Value = "Pending",
+            Text = "Chờ thanh toán",
+            Selected = Model.SelectedStatus == "Pending"
+        }
+    };
+
+    var methodOptions = new List<SelectListItem>
+{
+        new SelectListItem
+        {
+            Value = "Cash",
+            Text = "Tiền mặt",
+            Selected = Model.SelectedMethod == "Cash"
+        },
+        new SelectListItem
+        {
+            Value = "Bank Transfer",
+            Text = "Chuyển khoản",
+            Selected = Model.SelectedMethod == "Bank Transfer"
+        },
+        new SelectListItem
+        {
+            Value = "Credit Card",
+            Text = "Thẻ tín dụng",
+            Selected = Model.SelectedMethod == "Credit Card"
+        }
+    };
+
+    Func<string, string> statusLabel = status =>
+    {
+        switch (status)
+        {
+            case "Paid": return "Đã thanh toán";
+            case "Completed": return "Hoàn tất";
+            case "Partial": return "Thanh toán một phần";
+            case "Pending": return "Chờ thanh toán";
+            default:
+                return String.IsNullOrWhiteSpace(status)
+                    ? "Chưa xác định" : status;
+        }
+    };
+
+    Func<string, string> statusClass = status =>
+    {
+        switch (status)
+        {
+            case "Paid":
+            case "Completed":
+                return "admin-payment-status-paid";
+
+            case "Partial":
+                return "admin-payment-status-partial";
+
+            case "Pending":
+                return "admin-payment-status-pending";
+
+            default:
+                return "admin-payment-status-default";
+        }
+    };
+
+    Func<string, string> methodLabel = method =>
+    {
+        switch (method)
+        {
+            case "Cash": return "Tiền mặt";
+            case "Bank Transfer": return "Chuyển khoản";
+            case "Credit Card": return "Thẻ tín dụng";
+            default:
+                return String.IsNullOrWhiteSpace(method)
+                    ? "Chưa xác định" : method;
+        }
+    };
+}
+
+<style>
+    /* Giới hạn chiều rộng toàn bộ trang */
+    .admin-payments-page {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 20px;
+    }
+
+        .admin-payments-page *,
+        .admin-payments-page *::before,
+        .admin-payments-page *::after {
+            box-sizing: border-box;
+        }
+
+    /* Ngăn thẻ bảng vượt ra ngoài phần nội dung */
+    .admin-payments-table-card {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .admin-payments-table-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    /* Cho phép cuộn riêng bảng khi màn hình quá nhỏ */
+    .admin-payments-table-wrap {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        /* Thu bảng còn vừa chiều rộng khu vực nội dung */
+        .admin-payments-table-wrap .admin-payments-table {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+            .admin-payments-table-wrap .admin-payments-table th,
+            .admin-payments-table-wrap .admin-payments-table td {
+                padding: 12px 8px !important;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+                word-break: normal;
+                vertical-align: middle;
+                line-height: 1.5;
+                font-size: 12px;
+            }
+
+            .admin-payments-table-wrap .admin-payments-table th {
+                font-size: 10px;
+                line-height: 1.5;
+            }
+
+                /* Phân chia chiều rộng cho 9 cột, tổng bằng 100% */
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(1),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(1) {
+                    width: 11%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(2),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(2) {
+                    width: 14%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(3),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(3) {
+                    width: 16%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(4),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(4) {
+                    width: 11%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(5),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(5) {
+                    width: 10%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(6),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(6) {
+                    width: 8%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(7),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(7) {
+                    width: 10%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(8),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(8) {
+                    width: 8%;
+                }
+
+                .admin-payments-table-wrap .admin-payments-table th:nth-child(9),
+                .admin-payments-table-wrap .admin-payments-table td:nth-child(9) {
+                    width: 12%;
+                }
+
+        /* Thu gọn thông tin biên lai */
+        .admin-payments-table-wrap .admin-payments-receipt {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .admin-payments-table-wrap .admin-payments-receipt-icon {
+            display: none;
+        }
+
+        .admin-payments-table-wrap .admin-payments-receipt > div {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-payments-table-wrap .admin-payments-receipt strong,
+        .admin-payments-table-wrap .admin-payments-receipt small {
+            display: block;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .admin-payments-table-wrap .admin-payments-receipt strong {
+            font-size: 11px;
+        }
+
+        .admin-payments-table-wrap .admin-payments-receipt small {
+            margin-top: 5px;
+            font-size: 10px;
+        }
+
+        /* Thu gọn thông tin học viên */
+        .admin-payments-table-wrap .admin-payments-person {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .admin-payments-table-wrap .admin-payments-avatar {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            font-size: 11px;
+        }
+
+        .admin-payments-table-wrap .admin-payments-person-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .admin-payments-table-wrap .admin-payments-person-info strong,
+            .admin-payments-table-wrap .admin-payments-person-info small {
+                display: block;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .admin-payments-table-wrap .admin-payments-person-info strong {
+                font-size: 11px;
+                line-height: 1.5;
+            }
+
+            .admin-payments-table-wrap .admin-payments-person-info small {
+                margin-top: 4px;
+                font-size: 10px;
+            }
+
+        /* Tên lớp và khóa học được phép xuống dòng */
+        .admin-payments-table-wrap .admin-payments-class-info {
+            min-width: 0;
+        }
+
+            .admin-payments-table-wrap .admin-payments-class-info strong,
+            .admin-payments-table-wrap .admin-payments-class-info span {
+                display: block;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+                line-height: 1.5;
+            }
+
+            .admin-payments-table-wrap .admin-payments-class-info strong {
+                font-size: 11px;
+            }
+
+            .admin-payments-table-wrap .admin-payments-class-info span {
+                margin-top: 5px;
+                font-size: 10px;
+            }
+
+        /* Số tiền dễ đọc, không làm rộng bảng */
+        .admin-payments-table-wrap .admin-payments-amount,
+        .admin-payments-table-wrap .admin-payments-balance {
+            display: block;
+            font-size: 11px;
+            line-height: 1.6;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .admin-payments-table-wrap .admin-payments-balance-note {
+            display: block;
+            margin-top: 5px;
+            font-size: 10px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-payments-table-wrap .admin-payments-method {
+            display: inline-block;
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .admin-payments-table-wrap .admin-payments-status {
+            display: inline-block;
+            max-width: 100%;
+            padding: 5px 7px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            font-size: 10px;
+            line-height: 1.45;
+            text-align: center;
+        }
+
+        .admin-payments-table-wrap .admin-payments-date {
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-payments-table-wrap .admin-payments-time {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+        }
+
+        /* Đưa các nút thao tác thành danh sách dọc để tiết kiệm chiều rộng */
+        .admin-payments-table-wrap .admin-payments-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .admin-payments-table-wrap .payment-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+            margin: 0;
+            padding: 6px 3px;
+            border-radius: 6px;
+            font-size: 10px;
+            line-height: 1.4;
+            text-align: center;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-decoration: none;
+        }
+
+            .admin-payments-table-wrap .payment-action-btn .glyphicon {
+                display: none;
+            }
+
+        .admin-payments-table-wrap .admin-payments-empty {
+            padding: 30px 12px;
+            text-align: center;
+        }
+
+    /* Các bộ lọc không được đẩy rộng trang */
+    .admin-payments-page .admin-payments-filter-card,
+    .admin-payments-page .admin-payments-stats,
+    .admin-payments-page .admin-payments-revenue-grid {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .admin-payments-page .admin-payments-filter-form {
+        min-width: 0;
+    }
+
+    .admin-payments-page .admin-payments-filter-field {
+        min-width: 0;
+    }
+
+    .admin-payments-page .admin-payments-control {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Trên màn hình vừa và nhỏ, cho bảng cuộn ngang riêng */
+    @@media (max-width: 1200px) {
+        .admin-payments-page {
+            padding: 18px;
+        }
+
+        .admin-payments-table-wrap .admin-payments-table {
+            min-width: 1050px !important;
+            table-layout: fixed;
+        }
+
+            .admin-payments-table-wrap .admin-payments-table th,
+            .admin-payments-table-wrap .admin-payments-table td {
+                padding: 11px 8px !important;
+            }
+    }
+
+    @@media (max-width: 768px) {
+        .admin-payments-page {
+            padding: 12px;
+        }
+
+        .admin-payments-header {
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+            .admin-payments-header h2 {
+                font-size: 23px;
+            }
+
+        .admin-payments-create-btn {
+            max-width: 100%;
+        }
+
+        .admin-payments-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .admin-payments-revenue-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-payments-table-wrap .admin-payments-table {
+            min-width: 1050px !important;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .admin-payments-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="admin-payments-page">
+
+    <!-- Header -->
+    <div class="admin-payments-header">
+        <div>
+            <div class="admin-payments-eyebrow">
+                QUẢN LÝ TÀI CHÍNH
+            </div>
+
+            <h2>Quản lý thanh toán</h2>
+
+            <p>
+                Theo dõi học phí, giao dịch, biên lai và số dư học phí.
+            </p>
+        </div>
+
+        <a href="@Url.Action("Create", "Payments")"
+           class="admin-payments-create-btn">
+            <i class="glyphicon glyphicon-plus"></i>
+            Lập phiếu thu
+        </a>
+    </div>
+
+    <!-- Notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="admin-payments-alert payments-alert-success">
+            <i class="glyphicon glyphicon-ok-circle"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="admin-payments-alert payments-alert-error">
+            <i class="glyphicon glyphicon-exclamation-sign"></i>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    <!-- Summary cards -->
+    <div class="admin-payments-stats">
+
+        <div class="admin-payments-stat">
+            <div class="admin-payments-stat-icon stat-total">
+                <i class="glyphicon glyphicon-list-alt"></i>
+            </div>
+
+            <div class="admin-payments-stat-content">
+                <span>Tổng giao dịch</span>
+                <strong>@totalCount</strong>
+            </div>
+        </div>
+
+        <div class="admin-payments-stat">
+            <div class="admin-payments-stat-icon stat-paid">
+                <i class="glyphicon glyphicon-ok-circle"></i>
+            </div>
+
+            <div class="admin-payments-stat-content">
+                <span>Giao dịch hoàn tất</span>
+                <strong>@paidCount</strong>
+            </div>
+        </div>
+
+        <div class="admin-payments-stat">
+            <div class="admin-payments-stat-icon stat-partial">
+                <i class="glyphicon glyphicon-adjust"></i>
+            </div>
+
+            <div class="admin-payments-stat-content">
+                <span>Thanh toán một phần</span>
+                <strong>@partialCount</strong>
+            </div>
+        </div>
+
+        <div class="admin-payments-stat">
+            <div class="admin-payments-stat-icon stat-pending">
+                <i class="glyphicon glyphicon-time"></i>
+            </div>
+
+            <div class="admin-payments-stat-content">
+                <span>Chờ thanh toán</span>
+                <strong>@pendingCount</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Revenue summary -->
+    <div class="admin-payments-revenue-grid">
+
+        <div class="admin-payments-revenue-card">
+            <div class="admin-payments-revenue-icon revenue-collected">
+                <i class="glyphicon glyphicon-usd"></i>
+            </div>
+
+            <div>
+                <span>Tổng tiền giao dịch hoàn tất</span>
+                <strong>@paidTotal.ToString("N0") VNĐ</strong>
+                <small>Tính theo trạng thái Paid hoặc Completed.</small>
+            </div>
+        </div>
+
+        <div class="admin-payments-revenue-card">
+            <div class="admin-payments-revenue-icon revenue-partial">
+                <i class="glyphicon glyphicon-credit-card"></i>
+            </div>
+
+            <div>
+                <span>Tiền ghi nhận ở giao dịch một phần</span>
+                <strong>@partialTotal.ToString("N0") VNĐ</strong>
+                <small>Không bao gồm giao dịch chờ thanh toán.</small>
+            </div>
+        </div>
+
+        <div class="admin-payments-revenue-card">
+            <div class="admin-payments-revenue-icon revenue-total">
+                <i class="glyphicon glyphicon-stats"></i>
+            </div>
+
+            <div>
+                <span>Tổng tiền ghi nhận trong kết quả lọc</span>
+                <strong>@totalRecorded.ToString("N0") VNĐ</strong>
+                <small>Tổng AmountPaid của các giao dịch đang hiển thị.</small>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-payments-filter-card">
+
+        <div class="admin-payments-filter-heading">
+            <div class="admin-payments-filter-icon">
+                <i class="glyphicon glyphicon-filter"></i>
+            </div>
+
+            <div>
+                <h3>Tìm kiếm và lọc giao dịch</h3>
+                <p>
+                    Tìm theo mã biên lai, học viên hoặc lớp học.
+                </p>
+            </div>
+        </div>
+
+        @using (Html.BeginForm(
+            "Index",
+            "Payments",
+            FormMethod.Get,
+            new { @class = "admin-payments-filter-form" }))
+        {
+            <div class="admin-payments-filter-field payment-search-field">
+                <label for="searchTerm">Từ khóa</label>
+
+                <input type="text"
+                       id="searchTerm"
+                       name="searchTerm"
+                       value="@Model.SearchTerm"
+                       class="admin-payments-control"
+                       placeholder="Mã biên lai, học viên, lớp học..." />
+            </div>
+
+            <div class="admin-payments-filter-field">
+                <label for="status">Trạng thái</label>
+
+                <select id="status"
+                        name="status"
+                        class="admin-payments-control">
+
+                    <option value="">Tất cả trạng thái</option>
+
+                    @foreach (var option in statusOptions)
+                    {
+                        if (option.Selected)
+                        {
+                            <option value="@option.Value" selected="selected">
+                                @option.Text
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@option.Value">
+                                @option.Text
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="admin-payments-filter-field">
+                <label for="method">Phương thức</label>
+
+                <select id="method"
+                        name="method"
+                        class="admin-payments-control">
+
+                    <option value="">Tất cả phương thức</option>
+
+                    @foreach (var option in methodOptions)
+                    {
+                        if (option.Selected)
+                        {
+                            <option value="@option.Value" selected="selected">
+                                @option.Text
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@option.Value">
+                                @option.Text
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="admin-payments-filter-actions">
+                <button type="submit" class="payments-filter-submit">
+                    <i class="glyphicon glyphicon-search"></i>
+                    Tìm kiếm
+                </button>
+
+                <a href="@Url.Action("Index", "Payments")"
+                   class="payments-filter-reset">
+                    Đặt lại
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- Payments table -->
+    <div class="admin-payments-table-card">
+
+        <div class="admin-payments-table-heading">
+            <div>
+                <h3>Danh sách giao dịch</h3>
+                <p>
+                    Hiển thị @totalCount giao dịch theo điều kiện lọc hiện tại.
+                </p>
+            </div>
+
+            <span class="admin-payments-record-count">
+                @totalCount giao dịch
+            </span>
+        </div>
+
+        <div class="admin-payments-table-wrap">
+            <table class="admin-payments-table">
+
+                <thead>
+                    <tr>
+                        <th>Biên lai</th>
+                        <th>Học viên</th>
+                        <th>Lớp học / Khóa học</th>
+                        <th>Tiền đã ghi nhận</th>
+                        <th>Dư nợ ước tính</th>
+                        <th>Phương thức</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày giao dịch</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (items.Any())
+                    {
+                        foreach (var item in items)
+                        {
+                            var payment = item.Payment;
+
+                            <tr>
+                                <!-- Receipt -->
+                                <td>
+                                    <div class="admin-payments-receipt">
+                                        <span class="admin-payments-receipt-icon">
+                                            <i class="glyphicon glyphicon-file"></i>
+                                        </span>
+
+                                        <div>
+                                            <strong>@payment.ReceiptNumber</strong>
+                                            <small>Mã #@payment.Id</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Student -->
+                                <td>
+                                    <div class="admin-payments-person">
+                                        <div class="admin-payments-avatar">
+                                            @(!String.IsNullOrWhiteSpace(item.StudentName)
+                                                && item.StudentName != "N/A"
+                                                ? item.StudentName.Substring(0, 1).ToUpper()
+                                                : "H")
+                                        </div>
+
+                                        <div class="admin-payments-person-info">
+                                            <strong>@item.StudentName</strong>
+
+                                            <small>
+                                                @(payment.Enrollment != null &&
+                                                  payment.Enrollment.Student != null
+                                                    ? payment.Enrollment.Student.Username
+                                                    : "Chưa có tài khoản")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Class and course -->
+                                <td>
+                                    <div class="admin-payments-class-info">
+                                        <strong>@item.ClassName</strong>
+                                        <span>@item.CourseName</span>
+                                    </div>
+                                </td>
+
+                                <!-- Amount -->
+                                <td>
+                                    <strong class="admin-payments-amount">
+                                        @payment.AmountPaid.ToString("N0") VNĐ
+                                    </strong>
+                                </td>
+
+                                <!-- Remaining balance -->
+                                <td>
+                                    <strong class="admin-payments-balance">
+                                        @item.RemainingBalance.ToString("N0") VNĐ
+                                    </strong>
+
+                                    <small class="admin-payments-balance-note">
+                                        Từ học phí khóa học
+                                    </small>
+                                </td>
+
+                                <!-- Method -->
+                                <td>
+                                    <span class="admin-payments-method">
+                                        @methodLabel(payment.PaymentMethod)
+                                    </span>
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="admin-payments-status @statusClass(payment.PaymentStatus)">
+                                        @statusLabel(payment.PaymentStatus)
+                                    </span>
+                                </td>
+
+                                <!-- Date -->
+                                <td>
+                                    <div class="admin-payments-date">
+                                        @payment.PaymentDate.ToString("dd/MM/yyyy")
+                                    </div>
+
+                                    <small class="admin-payments-time">
+                                        @payment.PaymentDate.ToString("HH:mm")
+                                    </small>
+                                </td>
+
+                                <!-- Actions -->
+                                <td>
+                                    <div class="admin-payments-actions">
+
+                                        <a href="@Url.Action("Details", "Payments", new { id = payment.Id })"
+                                           class="payment-action-btn payment-action-details"
+                                           title="Xem chi tiết">
+                                            <i class="glyphicon glyphicon-eye-open"></i>
+                                            Chi tiết
+                                        </a>
+
+                                        <a href="@Url.Action("Edit", "Payments", new { id = payment.Id })"
+                                           class="payment-action-btn payment-action-edit"
+                                           title="Sửa giao dịch">
+                                            <i class="glyphicon glyphicon-edit"></i>
+                                            Sửa
+                                        </a>
+
+                                        <a href="@Url.Action("Delete", "Payments", new { id = payment.Id })"
+                                           class="payment-action-btn payment-action-delete"
+                                           title="Xóa giao dịch">
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                            Xóa
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9">
+                                <div class="admin-payments-empty">
+                                    <i class="glyphicon glyphicon-inbox"></i>
+
+                                    <strong>Không tìm thấy giao dịch</strong>
+
+                                    <p>
+                                        Hãy thử thay đổi từ khóa hoặc bộ lọc.
+                                    </p>
+
+                                    <a href="@Url.Action("Index", "Payments")">
+                                        Xóa bộ lọc
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>

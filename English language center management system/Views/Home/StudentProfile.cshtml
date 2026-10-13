@@ -1,0 +1,419 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.StudentProfileViewModel
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Hồ sơ cá nhân";
+
+    var displayName = string.IsNullOrWhiteSpace(Model.FullName)
+        ? "Học viên"
+        : Model.FullName;
+
+    var initial = displayName.Substring(0, 1).ToUpper();
+}
+
+<div class="student-portal">
+
+    @* SIDEBAR *@
+    <aside class="student-sidebar">
+
+        <a href="@Url.Action("StudentDashboard", "Home")"
+           class="student-brand">
+
+            <span class="student-brand-mark">EC</span>
+
+            <span class="student-brand-text">
+                ELC PORTAL
+                <small>STUDENT SPACE</small>
+            </span>
+
+        </a>
+
+        <div class="student-sidebar-caption">
+            KHÔNG GIAN HỌC TẬP
+        </div>
+
+        <nav class="student-side-nav">
+
+            <a href="@Url.Action("StudentDashboard", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="@Url.Action("StudentTimetable", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">▦</span>
+                Thời khóa biểu
+            </a>
+
+            <a href="@Url.Action("Index", "Courses")"
+               class="student-nav-link">
+                <span class="student-nav-icon">＋</span>
+                Đăng ký lớp học
+            </a>
+
+            <a href="@Url.Action("StudentProgress", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">▤</span>
+                Kết quả học tập
+            </a>
+
+            <a href="@Url.Action("StudentLearningResources", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">▣</span>
+                Bài tập &amp; Tài liệu
+            </a>
+
+            <a href="@Url.Action("StudentPayments", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">₫</span>
+                Học phí &amp; hóa đơn
+            </a>
+
+            <a href="@Url.Action("StudentProfile", "Home")"
+               class="student-nav-link is-active">
+                <span class="student-nav-icon">◎</span>
+                Hồ sơ cá nhân
+            </a>
+
+        </nav>
+
+        <div class="student-sidebar-bottom">
+
+            <div class="student-support-card">
+                <span class="student-support-icon">?</span>
+
+                <strong>Cần hỗ trợ?</strong>
+
+                <p>
+                    Liên hệ trung tâm nếu cần cập nhật
+                    những thông tin khác.
+                </p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "student-support-link" })
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "student-logout-link" })
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="student-main">
+
+        <header class="student-topbar">
+
+            <div class="student-topbar-title">
+                <span>CỔNG HỌC VIÊN</span>
+                <strong>Hồ sơ cá nhân</strong>
+            </div>
+
+            <div class="student-topbar-user">
+
+                <span class="student-avatar-small">
+                    @initial
+                </span>
+
+                <span class="student-topbar-user-info">
+                    <strong>@displayName</strong>
+                    <small>Học viên</small>
+                </span>
+
+            </div>
+
+        </header>
+
+        <main class="student-content">
+
+            <div class="student-breadcrumb">
+                Dashboard <span>/</span> Hồ sơ cá nhân
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @* PHẦN GIỚI THIỆU *@
+            <section class="profile-page-heading">
+
+                <div>
+                    <span class="student-panel-eyebrow">
+                        MY ACCOUNT
+                    </span>
+
+                    <h1>Hồ sơ cá nhân</h1>
+
+                    <p>
+                        Quản lý thông tin liên hệ và hồ sơ học viên
+                        của bạn tại English Center.
+                    </p>
+                </div>
+
+            </section>
+
+            <div class="profile-layout">
+
+                @* THẺ THÔNG TIN TÀI KHOẢN *@
+                <aside class="profile-overview-card">
+
+                    <div class="profile-avatar">
+                        @initial
+                    </div>
+
+                    <h2>@displayName</h2>
+
+                    <p class="profile-overview-email">
+                        @Model.Email
+                    </p>
+
+                    <span class="profile-role-badge">
+                        Học viên
+                    </span>
+
+                    <div class="profile-overview-divider"></div>
+
+                    <div class="profile-overview-item">
+                        <span>Tên đăng nhập</span>
+                        <strong>@Model.Username</strong>
+                    </div>
+
+                    <div class="profile-overview-item">
+                        <span>Ngày tham gia</span>
+                        <strong>
+                            @Model.CreatedAt.ToString("dd/MM/yyyy")
+                        </strong>
+                    </div>
+
+                    <p class="profile-overview-note">
+                        Tên đăng nhập và ngày tạo tài khoản
+                        không thể thay đổi tại màn hình này.
+                    </p>
+
+                </aside>
+
+                @* BIỂU MẪU CẬP NHẬT *@
+                <section class="student-panel profile-edit-panel">
+
+                    <div class="student-panel-heading">
+
+                        <div>
+                            <span class="student-panel-eyebrow">
+                                PERSONAL INFORMATION
+                            </span>
+
+                            <h2>Thông tin cá nhân</h2>
+
+                            <p>
+                                Cập nhật thông tin để trung tâm
+                                liên hệ với bạn khi cần thiết.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    @using (Html.BeginForm(
+                        "StudentProfile",
+                        "Home",
+                        FormMethod.Post,
+                        new { @class = "profile-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        @Html.ValidationSummary(
+                            true,
+                            "",
+                            new { @class = "profile-validation-summary" })
+
+                        <div class="profile-form-grid">
+
+                            <div class="profile-form-field">
+
+                                @Html.LabelFor(
+                                    m => m.FullName,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextBoxFor(
+                                    m => m.FullName,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "100",
+                                        autocomplete = "name",
+                                        placeholder = "Nhập họ và tên"
+                                    })
+
+                                @Html.ValidationMessageFor(
+                                    m => m.FullName,
+                                    "",
+                                    new { @class = "profile-field-error" })
+
+                            </div>
+
+                            <div class="profile-form-field">
+
+                                @Html.LabelFor(
+                                    m => m.Username,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextBoxFor(
+                                    m => m.Username,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        @readonly = "readonly"
+                                    })
+
+                                <small>
+                                    Tên đăng nhập không thể sửa.
+                                </small>
+
+                            </div>
+
+                            <div class="profile-form-field">
+
+                                @Html.LabelFor(
+                                    m => m.Email,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextBoxFor(
+                                    m => m.Email,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "email",
+                                        maxlength = "100",
+                                        autocomplete = "email",
+                                        placeholder = "ban@example.com"
+                                    })
+
+                                @Html.ValidationMessageFor(
+                                    m => m.Email,
+                                    "",
+                                    new { @class = "profile-field-error" })
+
+                            </div>
+
+                            <div class="profile-form-field">
+
+                                @Html.LabelFor(
+                                    m => m.Phone,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextBoxFor(
+                                    m => m.Phone,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "tel",
+                                        maxlength = "20",
+                                        autocomplete = "tel",
+                                        placeholder = "Nhập số điện thoại"
+                                    })
+
+                                @Html.ValidationMessageFor(
+                                    m => m.Phone,
+                                    "",
+                                    new { @class = "profile-field-error" })
+
+                            </div>
+
+                            <div class="profile-form-field">
+
+                                @Html.LabelFor(
+                                    m => m.DateOfBirth,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextBoxFor(
+                                    m => m.DateOfBirth,
+                                    "{0:yyyy-MM-dd}",
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "date"
+                                    })
+
+                                @Html.ValidationMessageFor(
+                                    m => m.DateOfBirth,
+                                    "",
+                                    new { @class = "profile-field-error" })
+
+                            </div>
+
+                            <div class="profile-form-field profile-form-field-full">
+
+                                @Html.LabelFor(
+                                    m => m.Address,
+                                    new { @class = "profile-form-label" })
+
+                                @Html.TextAreaFor(
+                                    m => m.Address,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        rows = "3",
+                                        maxlength = "255",
+                                        placeholder = "Nhập địa chỉ của bạn"
+                                    })
+
+                                @Html.ValidationMessageFor(
+                                    m => m.Address,
+                                    "",
+                                    new { @class = "profile-field-error" })
+
+                            </div>
+
+                        </div>
+
+                        <div class="profile-form-actions">
+
+                            @Html.ActionLink(
+                                "Quay lại Dashboard",
+                                "StudentDashboard",
+                                "Home",
+                                null,
+                                new { @class = "btn btn-outline-secondary" })
+
+                            <button type="submit"
+                                    class="btn btn-primary profile-save-button">
+                                Lưu thay đổi
+                            </button>
+
+                        </div>
+                    }
+
+                </section>
+
+            </div>
+
+        </main>
+
+        <footer class="student-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Student Information System</span>
+        </footer>
+
+    </div>
+
+</div>

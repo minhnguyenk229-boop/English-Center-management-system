@@ -1,0 +1,289 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+@using English_language_center_management_system.Models
+@using English_language_center_management_system.Models.ViewModels.Home
+
+@model TeacherGradesViewModel
+
+@{
+    ViewBag.Title = "Nhập điểm và đánh giá học viên";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    var availableClasses = Model.AvailableClasses
+        ?? new List<Class>();
+
+    var classOptions = availableClasses.Select(c => new SelectListItem
+    {
+        Value = c.Id.ToString(),
+        Text = c.ClassName +
+            (c.Course != null ? " - " + c.Course.CourseName : ""),
+        Selected = Model.SelectedClassId.HasValue
+            && Model.SelectedClassId.Value == c.Id
+    }).ToList();
+
+    var students = Model.Students
+        ?? new List<TeacherGradeRowViewModel>();
+}
+
+<div class="teacher-grades-page">
+
+    <div class="teacher-grades-header">
+        <div>
+            <div class="teacher-grades-eyebrow">TEACHER PORTAL</div>
+            <h1>Nhập điểm & đánh giá học viên</h1>
+            <p>Quản lý điểm số và nhận xét học tập của học viên trong lớp.</p>
+        </div>
+
+        <a href="@Url.Action("TeacherDashboard", "Home")"
+           class="teacher-grades-back">
+            ← Quay lại tổng quan
+        </a>
+
+        <a href="@Url.Action("TeacherSubmissions", "Home")"
+           class="teacher-nav-link">
+            <span class="teacher-nav-icon">📄</span>
+            Bài nộp học viên
+        </a>
+        <a href="@Url.Action("TeacherProfile", "Home")"
+           class="teacher-nav-link">
+            <span class="teacher-nav-icon">◎</span>
+            Hồ sơ cá nhân
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="teacher-grades-alert teacher-grades-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="teacher-grades-filter-card">
+        @using (Html.BeginForm(
+            "TeacherGrades",
+            "Home",
+            FormMethod.Get,
+            new { @class = "teacher-grades-filter" }))
+        {
+            <div class="teacher-grades-filter-field">
+                <label for="classId">Chọn lớp phụ trách</label>
+
+                @Html.DropDownList(
+                    "classId",
+                    classOptions,
+                    "-- Chọn lớp --",
+                    new
+                    {
+                        id = "classId",
+                        @class = "teacher-grades-select",
+                        onchange = "this.form.submit();"
+                    })
+            </div>
+
+            <noscript>
+                <button type="submit" class="teacher-grades-btn">
+                    Xem học viên
+                </button>
+            </noscript>
+        }
+    </div>
+
+    @if (Model.SelectedClass == null)
+    {
+        <div class="teacher-grades-empty">
+            <h3>Chưa có lớp được phân công</h3>
+            <p>Hiện tại bạn chưa có lớp nào để nhập điểm.</p>
+        </div>
+    }
+    else
+    {
+        <div class="teacher-grades-class-info">
+            <div>
+                <span>Tên lớp</span>
+                <strong>@Model.SelectedClass.ClassName</strong>
+            </div>
+
+            <div>
+                <span>Khóa học</span>
+                <strong>
+                    @(Model.SelectedClass.Course != null
+                        ? Model.SelectedClass.Course.CourseName
+                        : "Chưa cập nhật")
+                </strong>
+            </div>
+
+            <div>
+                <span>Số học viên</span>
+                <strong>@students.Count</strong>
+            </div>
+        </div>
+
+        if (students.Count == 0)
+        {
+            <div class="teacher-grades-empty">
+                <h3>Chưa có học viên trong lớp</h3>
+                <p>Lớp này chưa có học viên thuộc các trạng thái đăng ký được phép nhập điểm.</p>
+            </div>
+        }
+        else
+        {
+            using (Html.BeginForm(
+                "SaveTeacherGrades",
+                "Home",
+                FormMethod.Post,
+                new { @class = "teacher-grades-form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.SelectedClassId)
+
+                @Html.ValidationSummary(
+                    false,
+                    "",
+                    new { @class = "teacher-grades-validation-summary" })
+
+                <div class="teacher-grades-table-heading">
+                    <div>
+                        <h2>Danh sách học viên</h2>
+                        <p>Điểm giữa kỳ, cuối kỳ và tổng điểm sử dụng thang điểm 10.</p>
+                    </div>
+
+                    <button type="submit" class="teacher-grades-btn">
+                        Lưu điểm và nhận xét
+                    </button>
+                </div>
+
+                <div class="teacher-grades-table-wrap">
+                    <table class="teacher-grades-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Học viên</th>
+                                <th>Giữa kỳ</th>
+                                <th>Cuối kỳ</th>
+                                <th>Tổng điểm</th>
+                                <th>Kết quả học tập</th>
+                                <th>Nhận xét giáo viên</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @for (int i = 0; i < students.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i + 1)</td>
+
+                                    <td>
+                                        @Html.HiddenFor(m => m.Students[i].EnrollmentId)
+                                        @Html.HiddenFor(m => m.Students[i].StudentId)
+
+                                        <div class="teacher-grades-student-name">
+                                            @students[i].FullName
+                                        </div>
+
+                                        <div class="teacher-grades-username">
+                                            @students[i].Username
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(
+                                            m => m.Students[i].MidtermScore,
+                                            "{0:0.##}",
+                                            new
+                                            {
+                                                @class = "teacher-grades-input",
+                                                type = "number",
+                                                min = "0",
+                                                max = "10",
+                                                step = "0.01",
+                                                placeholder = "0-10"
+                                            })
+
+                                        @Html.ValidationMessageFor(
+                                            m => m.Students[i].MidtermScore,
+                                            "",
+                                            new { @class = "teacher-grades-error" })
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(
+                                            m => m.Students[i].FinalScore,
+                                            "{0:0.##}",
+                                            new
+                                            {
+                                                @class = "teacher-grades-input",
+                                                type = "number",
+                                                min = "0",
+                                                max = "10",
+                                                step = "0.01",
+                                                placeholder = "0-10"
+                                            })
+
+                                        @Html.ValidationMessageFor(
+                                            m => m.Students[i].FinalScore,
+                                            "",
+                                            new { @class = "teacher-grades-error" })
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(
+                                            m => m.Students[i].TotalScore,
+                                            "{0:0.##}",
+                                            new
+                                            {
+                                                @class = "teacher-grades-input",
+                                                type = "number",
+                                                min = "0",
+                                                max = "10",
+                                                step = "0.01",
+                                                placeholder = "0-10"
+                                            })
+
+                                        @Html.ValidationMessageFor(
+                                            m => m.Students[i].TotalScore,
+                                            "",
+                                            new { @class = "teacher-grades-error" })
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(
+                                            m => m.Students[i].LearningOutcome,
+                                            new
+                                            {
+                                                @class = "teacher-grades-input",
+                                                maxlength = "50",
+                                                placeholder = "Đạt / Cần cải thiện"
+                                            })
+                                    </td>
+
+                                    <td>
+                                        @Html.TextAreaFor(
+                                            m => m.Students[i].FeedbackComments,
+                                            new
+                                            {
+                                                @class = "teacher-grades-textarea",
+                                                rows = "3",
+                                                maxlength = "4000",
+                                                placeholder = "Nhận xét về kết quả học tập..."
+                                            })
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="teacher-grades-form-footer">
+                    <span>
+                        Kiểm tra dữ liệu trước khi lưu. Nhận xét để trống sẽ giữ nguyên nhận xét cũ.
+                    </span>
+
+                    <button type="submit" class="teacher-grades-btn">
+                        Lưu thay đổi
+                    </button>
+                </div>
+            }
+        }
+    }
+</div>

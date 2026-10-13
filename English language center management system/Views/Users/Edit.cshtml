@@ -1,0 +1,408 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Users.UserEditViewModel
+
+@using System.Web.Mvc
+
+@{
+    ViewBag.Title = "Sửa người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .user-edit-page {
+        padding: 24px;
+        color: #25324a;
+    }
+
+    .user-edit-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .user-edit-eyebrow {
+        color: #929db0;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        margin-bottom: 7px;
+        text-transform: uppercase;
+    }
+
+    .user-edit-heading h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 800;
+        color: #25324a;
+    }
+
+    .user-edit-heading p {
+        margin: 0;
+        color: #8793a8;
+        font-size: 14px;
+    }
+
+    .user-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: .2s ease;
+        cursor: pointer;
+    }
+
+    .user-edit-btn-back {
+        background: #fff;
+        border: 1px solid #dce3ed;
+        color: #526078;
+    }
+
+        .user-edit-btn-back:hover {
+            background: #f6f8fb;
+            color: #25324a;
+        }
+
+    .user-edit-btn-save {
+        background: #c92828;
+        border: 1px solid #c92828;
+        color: #fff;
+    }
+
+        .user-edit-btn-save:hover {
+            background: #a91f1f;
+            border-color: #a91f1f;
+            color: #fff;
+        }
+
+    .user-edit-card {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e3e9f1;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(26, 42, 69, .04);
+    }
+
+    .user-edit-card-header {
+        padding: 22px 26px;
+        border-bottom: 1px solid #edf0f5;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-edit-avatar {
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: #fff0f0;
+        color: #c92828;
+        font-size: 23px;
+        font-weight: 800;
+    }
+
+    .user-edit-card-header h2 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #25324a;
+    }
+
+    .user-edit-card-header p {
+        margin: 0;
+        font-size: 13px;
+        color: #8793a8;
+    }
+
+    .user-edit-card-body {
+        padding: 26px;
+    }
+
+    .user-edit-section-title {
+        margin: 0 0 20px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #25324a;
+    }
+
+    .user-edit-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px 24px;
+    }
+
+    .user-edit-field {
+        min-width: 0;
+    }
+
+    .user-edit-field-full {
+        grid-column: 1 / -1;
+    }
+
+    .user-edit-label {
+        display: block;
+        margin-bottom: 9px;
+        color: #45536a;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .user-edit-required {
+        color: #c92828;
+    }
+
+    .user-edit-input {
+        display: block;
+        width: 100%;
+        min-height: 46px;
+        padding: 11px 14px;
+        box-sizing: border-box;
+        border: 1px solid #d9e1ec;
+        border-radius: 9px;
+        background: #fff;
+        color: #25324a;
+        font-size: 14px;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .user-edit-input:focus {
+            border-color: #c92828;
+            box-shadow: 0 0 0 3px rgba(201, 40, 40, .09);
+        }
+
+        .user-edit-input[readonly] {
+            background: #f4f6fa;
+            color: #7c8799;
+            cursor: not-allowed;
+        }
+
+    .user-edit-help {
+        display: block;
+        margin-top: 8px;
+        color: #8995a8;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .user-edit-validation {
+        display: block;
+        margin-top: 7px;
+        color: #c62828;
+        font-size: 12px;
+    }
+
+    .user-edit-validation-summary {
+        margin-bottom: 22px;
+        padding: 14px 16px;
+        border: 1px solid #ffd8d8;
+        border-radius: 9px;
+        background: #fff4f4;
+        color: #b42323;
+    }
+
+        .user-edit-validation-summary:empty {
+            display: none;
+        }
+
+    .user-edit-note {
+        margin-top: 25px;
+        padding: 14px 16px;
+        border-radius: 9px;
+        background: #f5f7fb;
+        color: #66748a;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+        .user-edit-note strong {
+            color: #34425a;
+        }
+
+    .user-edit-card-footer {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 20px 26px;
+        border-top: 1px solid #edf0f5;
+        background: #fbfcfe;
+    }
+
+    @@media (max-width: 768px) {
+        .user-edit-page {
+            padding: 15px;
+        }
+
+        .user-edit-grid {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .user-edit-field-full {
+            grid-column: auto;
+        }
+
+        .user-edit-card-body,
+        .user-edit-card-header {
+            padding: 20px;
+        }
+
+        .user-edit-card-footer {
+            padding: 18px 20px;
+        }
+    }
+</style>
+
+<div class="user-edit-page">
+
+    <div class="user-edit-heading">
+        <div>
+            <div class="user-edit-eyebrow">English Language Center</div>
+            <h1>Sửa người dùng</h1>
+            <p>Cập nhật thông tin cá nhân và quyền truy cập hệ thống.</p>
+        </div>
+
+        <a href="@Url.Action("Index", "Users")"
+           class="user-edit-btn user-edit-btn-back">
+            ← Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="user-edit-card">
+
+        <div class="user-edit-card-header">
+            <div class="user-edit-avatar">✎</div>
+            <div>
+                <h2>Thông tin tài khoản</h2>
+                <p>Mã người dùng: #@Model.Id</p>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("Edit", "Users", FormMethod.Post, new { @class = "user-edit-form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(model => model.Id)
+
+            <div class="user-edit-card-body">
+
+                @Html.ValidationSummary(true, "Vui lòng kiểm tra lại thông tin:", new { @class = "user-edit-validation-summary" })
+
+                <h3 class="user-edit-section-title">Thông tin cơ bản</h3>
+
+                <div class="user-edit-grid">
+
+                    <div class="user-edit-field">
+                        @Html.LabelFor(model => model.Username, new { @class = "user-edit-label" })
+                        @Html.TextBoxFor(model => model.Username, new
+                        {
+                            @class = "user-edit-input",
+                            @readonly = "readonly",
+                            autocomplete = "username"
+                        })
+                        <small class="user-edit-help">
+                            Tên đăng nhập hiện không được thay đổi tại biểu mẫu này.
+                        </small>
+                        @Html.ValidationMessageFor(model => model.Username, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                    <div class="user-edit-field">
+                        @Html.LabelFor(model => model.RoleId, new { @class = "user-edit-label" })
+                        @Html.DropDownListFor(
+                            model => model.RoleId,
+                            (IEnumerable<SelectListItem>)ViewBag.RoleId,
+                            "-- Chọn vai trò --",
+                            new { @class = "user-edit-input" }
+                        )
+                        @Html.ValidationMessageFor(model => model.RoleId, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                    <div class="user-edit-field user-edit-field-full">
+                        @Html.LabelFor(model => model.FullName, new { @class = "user-edit-label" })
+                        <span class="user-edit-required">*</span>
+                        @Html.TextBoxFor(model => model.FullName, new
+                        {
+                            @class = "user-edit-input",
+                            placeholder = "Nhập họ và tên",
+                            autocomplete = "name"
+                        })
+                        @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                    <div class="user-edit-field">
+                        @Html.LabelFor(model => model.Email, new { @class = "user-edit-label" })
+                        <span class="user-edit-required">*</span>
+                        @Html.TextBoxFor(model => model.Email, new
+                        {
+                            @class = "user-edit-input",
+                            type = "email",
+                            placeholder = "example@email.com",
+                            autocomplete = "email"
+                        })
+                        @Html.ValidationMessageFor(model => model.Email, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                    <div class="user-edit-field">
+                        @Html.LabelFor(model => model.Phone, new { @class = "user-edit-label" })
+                        @Html.TextBoxFor(model => model.Phone, new
+                        {
+                            @class = "user-edit-input",
+                            placeholder = "Nhập số điện thoại",
+                            autocomplete = "tel"
+                        })
+                        @Html.ValidationMessageFor(model => model.Phone, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                    <div class="user-edit-field user-edit-field-full">
+                        @Html.LabelFor(model => model.NewPassword, new { @class = "user-edit-label" })
+                        @Html.PasswordFor(model => model.NewPassword, new
+                        {
+                            @class = "user-edit-input",
+                            placeholder = "Nhập mật khẩu mới nếu cần đổi",
+                            autocomplete = "new-password"
+                        })
+                        <small class="user-edit-help">
+                            Để trống nếu muốn giữ nguyên mật khẩu hiện tại.
+                        </small>
+                        @Html.ValidationMessageFor(model => model.NewPassword, "", new { @class = "user-edit-validation" })
+                    </div>
+
+                </div>
+
+                <div class="user-edit-note">
+                    <strong>Lưu ý:</strong>
+                    Các trường có dấu <span class="user-edit-required">*</span> là bắt buộc.
+                    Khi thay đổi vai trò, hãy kiểm tra kỹ để cấp đúng quyền cho tài khoản.
+                </div>
+
+            </div>
+
+            <div class="user-edit-card-footer">
+                <a href="@Url.Action("Index", "Users")"
+                   class="user-edit-btn user-edit-btn-back">
+                    Hủy bỏ
+                </a>
+
+                <button type="submit" class="user-edit-btn user-edit-btn-save">
+                    ✓ Lưu thay đổi
+                </button>
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

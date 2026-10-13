@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - English Center</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white public-navbar">
+        <div class="container">
+            @Html.ActionLink(
+                "ENGLISH CENTER",
+                "Index",
+                "Home",
+                new { area = "" },
+                new { @class = "navbar-brand" }
+            )
+
+            <button type="button"
+                    class="navbar-toggler"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar"
+                    aria-expanded="false"
+                    aria-label="Mở menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Trang chủ", "Index", "Home",
+                            null, new { @class = "nav-link" }
+                        )
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Khóa học", "Index", "Courses",
+                            null, new { @class = "nav-link" }
+                        )
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Liên hệ", "Contact", "Home",
+                            null, new { @class = "nav-link" }
+                        )
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    @if (Session["UserId"] == null)
+                    {
+                        @Html.ActionLink(
+                            "Đăng nhập", "Login", "Auth",
+                            null, new { @class = "btn btn-outline-light" }
+                        )
+
+                        @Html.ActionLink(
+                            "Đăng ký", "Register", "Auth",
+                            null, new { @class = "btn btn-primary" }
+                        )
+                    }
+                    else
+                    {
+                        <span class="text-white me-2">
+                            Xin chào, @Session["FullName"]
+                        </span>
+
+                        @Html.ActionLink(
+                            "Đăng xuất", "Logout", "Auth",
+                            null, new { @class = "btn btn-outline-light" }
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>
+                &copy; @DateTime.Now.Year - English Center.
+                Hệ thống quản lý trung tâm Anh ngữ.
+            </p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

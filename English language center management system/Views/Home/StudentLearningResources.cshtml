@@ -1,0 +1,577 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.StudentLearningViewModel
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Web
+@using English_language_center_management_system.Models
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Bài tập & Tài liệu";
+
+    var studentName =
+        Model.StudentInfo != null &&
+        !string.IsNullOrWhiteSpace(Model.StudentInfo.FullName)
+        ? Model.StudentInfo.FullName
+        : "Học viên";
+
+    var assignments = Model.Assignments ?? new List<Assignment>();
+    var materials = Model.Materials ?? new List<CourseMaterial>();
+    var submissions = Model.Submissions ?? new List<Submission>();
+
+    var submittedAssignmentIds = submissions
+        .Select(s => s.AssignmentId)
+        .Distinct()
+        .ToList();
+
+    int submittedCount = assignments.Count(
+        a => submittedAssignmentIds.Contains(a.Id));
+
+    int pendingCount = assignments.Count(
+        a => !submittedAssignmentIds.Contains(a.Id) &&
+             a.DueDate.Date >= DateTime.Today);
+
+    int overdueCount = assignments.Count(
+        a => !submittedAssignmentIds.Contains(a.Id) &&
+             a.DueDate.Date < DateTime.Today);
+}
+
+<div class="student-portal">
+
+    @* SIDEBAR *@
+    <aside class="student-sidebar">
+
+        <a href="@Url.Action("StudentDashboard", "Home")"
+           class="student-brand">
+
+            <span class="student-brand-mark">EC</span>
+
+            <span class="student-brand-text">
+                ELC PORTAL
+                <small>STUDENT SPACE</small>
+            </span>
+
+        </a>
+
+        <div class="student-sidebar-caption">
+            KHÔNG GIAN HỌC TẬP
+        </div>
+
+        <nav class="student-side-nav">
+
+            <a href="@Url.Action("StudentDashboard", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="@Url.Action("StudentTimetable", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">▦</span>
+                Thời khóa biểu
+            </a>
+
+            <a href="@Url.Action("Index", "Courses")"
+               class="student-nav-link">
+                <span class="student-nav-icon">＋</span>
+                Đăng ký lớp học
+            </a>
+
+            <a href="@Url.Action("StudentProgress", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">▤</span>
+                Kết quả học tập
+            </a>
+
+            <a href="@Url.Action("StudentLearningResources", "Home")"
+               class="student-nav-link is-active">
+                <span class="student-nav-icon">▣</span>
+                Bài tập &amp; Tài liệu
+            </a>
+
+            <a href="@Url.Action("StudentPayments", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">₫</span>
+                Học phí &amp; hóa đơn
+            </a>
+
+        </nav>
+
+        <div class="student-sidebar-bottom">
+
+            <div class="student-support-card">
+                <span class="student-support-icon">?</span>
+                <strong>Cần hỗ trợ?</strong>
+                <p>Liên hệ trung tâm khi bạn cần giải đáp.</p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "student-support-link" })
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "student-logout-link" })
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="student-main">
+
+        <header class="student-topbar">
+
+            <div class="student-topbar-title">
+                <span>CỔNG HỌC VIÊN</span>
+                <strong>Bài tập &amp; Tài liệu</strong>
+            </div>
+
+            <div class="student-topbar-user">
+
+                <span class="student-avatar-small">
+                    @studentName.Substring(0, 1).ToUpper()
+                </span>
+
+                <span class="student-topbar-user-info">
+                    <strong>@studentName</strong>
+                    <small>Học viên</small>
+                </span>
+
+            </div>
+
+        </header>
+
+        <main class="student-content">
+
+            <div class="student-breadcrumb">
+                Dashboard <span>/</span> Bài tập &amp; Tài liệu
+            </div>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @* TIÊU ĐỀ *@
+            <section class="learning-page-heading">
+
+                <div>
+                    <span class="student-panel-eyebrow">
+                        LEARNING RESOURCES
+                    </span>
+
+                    <h1>Bài tập &amp; Tài liệu học tập</h1>
+
+                    <p>
+                        Theo dõi hạn nộp bài tập, gửi bài làm
+                        và mở tài liệu của các lớp bạn đang theo học.
+                    </p>
+                </div>
+
+            </section>
+
+            @* THỐNG KÊ *@
+            <section class="learning-stat-grid">
+
+                <article class="learning-stat-card">
+                    <span class="learning-stat-icon learning-icon-blue">
+                        ▤
+                    </span>
+
+                    <div>
+                        <small>Tổng bài tập</small>
+                        <strong>@assignments.Count</strong>
+                    </div>
+                </article>
+
+                <article class="learning-stat-card">
+                    <span class="learning-stat-icon learning-icon-green">
+                        ✓
+                    </span>
+
+                    <div>
+                        <small>Đã nộp</small>
+                        <strong>@submittedCount</strong>
+                    </div>
+                </article>
+
+                <article class="learning-stat-card">
+                    <span class="learning-stat-icon learning-icon-orange">
+                        ◷
+                    </span>
+
+                    <div>
+                        <small>Chưa nộp, còn hạn</small>
+                        <strong>@pendingCount</strong>
+                    </div>
+                </article>
+
+                <article class="learning-stat-card">
+                    <span class="learning-stat-icon learning-icon-red">
+                        !
+                    </span>
+
+                    <div>
+                        <small>Chưa nộp, quá hạn</small>
+                        <strong>@overdueCount</strong>
+                    </div>
+                </article>
+
+            </section>
+
+            @* DANH SÁCH BÀI TẬP *@
+            <section class="student-panel learning-panel">
+
+                <div class="student-panel-heading">
+
+                    <div>
+                        <span class="student-panel-eyebrow">
+                            ASSIGNMENTS
+                        </span>
+
+                        <h2>Bài tập của tôi</h2>
+
+                        <p>
+                            Các bài tập thuộc những lớp bạn đã được duyệt
+                            hoặc đã tham gia.
+                        </p>
+                    </div>
+
+                </div>
+
+                @if (assignments.Any())
+                {
+                    <div class="learning-assignment-list">
+
+                        @foreach (var assignment in assignments)
+                        {
+                            var latestSubmission = submissions
+                                .Where(s => s.AssignmentId == assignment.Id)
+                                .OrderByDescending(s => s.SubmittedAt)
+                                .FirstOrDefault();
+
+                            bool isOverdue =
+                                DateTime.Now > assignment.DueDate;
+
+                            string statusLabel =
+                                latestSubmission != null &&
+                                latestSubmission.Grade.HasValue
+                                    ? "Đã chấm điểm"
+                                    : latestSubmission != null
+                                        ? "Đã nộp bài"
+                                        : isOverdue
+                                            ? "Quá hạn"
+                                            : "Chưa nộp";
+
+                            string statusClass =
+                                latestSubmission != null &&
+                                latestSubmission.Grade.HasValue
+                                    ? "learning-status-graded"
+                                    : latestSubmission != null
+                                        ? "learning-status-submitted"
+                                        : isOverdue
+                                            ? "learning-status-overdue"
+                                            : "learning-status-pending";
+
+                            <article class="learning-assignment-card">
+
+                                <div class="learning-assignment-header">
+
+                                    <span class="learning-assignment-icon">
+                                        ▤
+                                    </span>
+
+                                    <span class="learning-status @statusClass">
+                                        @statusLabel
+                                    </span>
+
+                                </div>
+
+                                <h3>@assignment.Title</h3>
+
+                                <p class="learning-assignment-class">
+                                    Lớp:
+                                    @(assignment.Class != null
+                                        ? assignment.Class.ClassName
+                                        : "Chưa cập nhật")
+                                </p>
+
+                                <div class="learning-assignment-info">
+
+                                    <span>
+                                        Hạn nộp
+                                    </span>
+
+                                    <strong>
+                                        @assignment.DueDate.ToString("dd/MM/yyyy HH:mm")
+                                    </strong>
+
+                                </div>
+
+                                @if (latestSubmission != null)
+                                {
+                                    <div class="learning-submission-info">
+
+                                        <p>
+                                            Đã gửi lúc
+                                            @latestSubmission.SubmittedAt.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+
+                                        @if (latestSubmission.Grade.HasValue)
+                                        {
+                                            <div class="learning-grade">
+                                                Điểm đã chấm:
+                                                <strong>
+                                                    @latestSubmission.Grade.Value.ToString("0.##")
+                                                </strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p class="learning-pending-feedback">
+                                                Bài làm đang chờ giáo viên chấm.
+                                            </p>
+                                        }
+
+                                        @if (
+                                            Uri.TryCreate(
+                                                latestSubmission.FileUrl,
+                                                UriKind.Absolute,
+                                                out Uri submittedUri) &&
+                                            (submittedUri.Scheme == Uri.UriSchemeHttp ||
+                                             submittedUri.Scheme == Uri.UriSchemeHttps))
+                                        {
+                                            <a href="@latestSubmission.FileUrl"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="learning-file-link">
+                                                Mở bài đã nộp ↗
+                                            </a>
+                                        }
+
+                                    </div>
+                                }
+
+                                @* FORM GỬI BÀI BẰNG ĐƯỜNG DẪN *@
+                                @if (latestSubmission == null ||
+                                     !latestSubmission.Grade.HasValue)
+                                {
+                                    <div class="learning-submit-box">
+
+                                        @if (isOverdue && latestSubmission == null)
+                                        {
+                                            <p class="learning-late-warning">
+                                                Bài tập đã quá hạn. Bài nộp muộn
+                                                vẫn được hệ thống ghi nhận.
+                                            </p>
+                                        }
+
+                                        @using (Html.BeginForm(
+                                            "SubmitLearningAssignment",
+                                            "Home",
+                                            FormMethod.Post,
+                                            new { @class = "learning-submit-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            @Html.Hidden(
+                                                "assignmentId",
+                                                assignment.Id)
+
+                                            <label>
+                                                Liên kết bài làm
+                                            </label>
+
+                                            @Html.TextBox(
+                                                "fileUrl",
+                                                latestSubmission != null
+                                                    ? latestSubmission.FileUrl
+                                                    : "",
+                                                new
+                                                {
+                                                    @class = "form-control",
+                                                    type = "url",
+                                                    maxlength = "500",
+                                                    required = "required",
+                                                    placeholder = "https://drive.google.com/..."
+                                                })
+
+                                            <small>
+                                                Đặt quyền xem tệp phù hợp
+                                                để giáo viên có thể mở bài làm.
+                                            </small>
+
+                                            <button type="submit"
+                                                    class="btn btn-primary learning-submit-button">
+                                                @(latestSubmission == null
+                                                    ? "Gửi bài tập"
+                                                    : "Cập nhật bài nộp")
+                                            </button>
+                                        }
+
+                                    </div>
+                                }
+
+                            </article>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="student-empty-state">
+
+                        <div class="student-empty-icon">▤</div>
+
+                        <h3>Chưa có bài tập nào</h3>
+
+                        <p>
+                            Khi giáo viên giao bài cho lớp của bạn,
+                            bài tập sẽ xuất hiện ở khu vực này.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+            @* TÀI LIỆU HỌC TẬP *@
+            <section class="student-panel learning-panel">
+
+                <div class="student-panel-heading">
+
+                    <div>
+                        <span class="student-panel-eyebrow">
+                            COURSE MATERIALS
+                        </span>
+
+                        <h2>Tài liệu học tập</h2>
+
+                        <p>
+                            Tài liệu được giáo viên tải lên cho các lớp của bạn.
+                        </p>
+                    </div>
+
+                    <span class="student-panel-heading-icon">▣</span>
+
+                </div>
+
+                @if (materials.Any())
+                {
+                    <div class="learning-material-grid">
+
+                        @foreach (var material in materials)
+                        {
+                            Uri materialUri;
+
+                            bool isHttpLink =
+                                Uri.TryCreate(
+                                    material.FileUrl,
+                                    UriKind.Absolute,
+                                    out materialUri) &&
+                                (materialUri.Scheme == Uri.UriSchemeHttp ||
+                                 materialUri.Scheme == Uri.UriSchemeHttps);
+
+                            bool isLocalPath =
+                                !string.IsNullOrWhiteSpace(material.FileUrl) &&
+                                (material.FileUrl.StartsWith("~/") ||
+                                 material.FileUrl.StartsWith("/"));
+
+                            string materialHref =
+                                isHttpLink
+                                    ? material.FileUrl
+                                    : isLocalPath
+                                        ? Url.Content(material.FileUrl)
+                                        : null;
+
+                            <article class="learning-material-card">
+
+                                <div class="learning-material-icon">
+                                    ▤
+                                </div>
+
+                                <div class="learning-material-content">
+
+                                    <h3>@material.Title</h3>
+
+                                    <p>
+                                        Lớp:
+                                        @(material.Class != null
+                                            ? material.Class.ClassName
+                                            : "Chưa cập nhật")
+                                    </p>
+
+                                    <small>
+                                        Đăng tải:
+                                        @material.UploadedAt.ToString("dd/MM/yyyy")
+                                    </small>
+
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(materialHref))
+                                {
+                                    <a href="@materialHref"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="learning-material-link">
+                                        Mở tài liệu ↗
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="learning-material-unavailable">
+                                        Chưa có liên kết hợp lệ
+                                    </span>
+                                }
+
+                            </article>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="student-empty-state">
+
+                        <div class="student-empty-icon">▣</div>
+
+                        <h3>Chưa có tài liệu học tập</h3>
+
+                        <p>
+                            Tài liệu sẽ xuất hiện khi giáo viên
+                            tải lên hệ thống cho lớp của bạn.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+        </main>
+
+        <footer class="student-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Student Information System</span>
+        </footer>
+
+    </div>
+
+</div>

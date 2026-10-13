@@ -1,0 +1,357 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Payments.PaymentCreateViewModel
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+
+@{
+    ViewBag.Title = "Lập phiếu thu học phí";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var enrollmentOptions =
+        ViewBag.EnrollmentId as IEnumerable<SelectListItem>
+        ?? new List<SelectListItem>();
+
+    var currentEnrollmentId = Model.EnrollmentId.ToString();
+
+    var selectedMethod =
+        !String.IsNullOrWhiteSpace(Model.PaymentMethod)
+        ? Model.PaymentMethod
+        : "Cash";
+
+    var selectedPaymentStatus =
+        !String.IsNullOrWhiteSpace(Model.PaymentStatus)
+        ? Model.PaymentStatus
+        : "Paid";
+
+    var methodOptions = new List<SelectListItem>
+{
+        new SelectListItem
+        {
+            Value = "Cash",
+            Text = "Tiền mặt",
+            Selected = selectedMethod == "Cash"
+        },
+        new SelectListItem
+        {
+            Value = "Bank Transfer",
+            Text = "Chuyển khoản",
+            Selected = selectedMethod == "Bank Transfer"
+        },
+        new SelectListItem
+        {
+            Value = "Credit Card",
+            Text = "Thẻ tín dụng",
+            Selected = selectedMethod == "Credit Card"
+        }
+    };
+
+    var paymentStatusOptions = new List<SelectListItem>
+{
+        new SelectListItem
+        {
+            Value = "Paid",
+            Text = "Đã thanh toán đủ",
+            Selected = selectedPaymentStatus == "Paid"
+        },
+        new SelectListItem
+        {
+            Value = "Partial",
+            Text = "Thanh toán một phần",
+            Selected = selectedPaymentStatus == "Partial"
+        },
+        new SelectListItem
+        {
+            Value = "Pending",
+            Text = "Chờ thanh toán",
+            Selected = selectedPaymentStatus == "Pending"
+        }
+    };
+}
+
+<div class="admin-payment-create-page">
+
+    <!-- Header -->
+    <div class="payment-create-header">
+        <div>
+            <div class="payment-create-eyebrow">
+                QUẢN LÝ TÀI CHÍNH
+            </div>
+
+            <h2>Lập phiếu thu học phí</h2>
+
+            <p>
+                Ghi nhận khoản thu và quản lý biên lai của học viên.
+            </p>
+        </div>
+
+        <div class="payment-create-header-icon">
+            <i class="glyphicon glyphicon-credit-card"></i>
+        </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="payment-create-card">
+
+        <div class="payment-create-card-heading">
+            <div class="payment-create-section-icon">
+                <i class="glyphicon glyphicon-list-alt"></i>
+            </div>
+
+            <div>
+                <h3>Thông tin phiếu thu</h3>
+                <p>
+                    Điền đầy đủ thông tin giao dịch trước khi lưu.
+                </p>
+            </div>
+        </div>
+
+        @using (Html.BeginForm(
+            "Create",
+            "Payments",
+            FormMethod.Post,
+            new { @class = "payment-create-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.ValidationSummary(
+                false,
+                "",
+                new { @class = "payment-create-validation" }
+            )
+
+            <div class="payment-create-grid">
+
+                <!-- Enrollment -->
+                <div class="payment-create-group payment-create-full">
+                    @Html.LabelFor(
+                        m => m.EnrollmentId,
+                        "Học viên và lớp học *",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    <select id="EnrollmentId"
+                            name="EnrollmentId"
+                            class="payment-create-control">
+
+                        <option value="">-- Chọn học viên và lớp học --</option>
+
+                        @foreach (var option in enrollmentOptions)
+                        {
+                            if (option.Value == currentEnrollmentId)
+                            {
+                                <option value="@option.Value"
+                                        selected="selected">
+                                    @option.Text
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@option.Value">
+                                    @option.Text
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    @Html.ValidationMessageFor(
+                        m => m.EnrollmentId,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+
+                    <small class="payment-create-hint">
+                        Lựa chọn hiển thị tên học viên, lớp học và học phí khóa học.
+                    </small>
+
+                    @if (!enrollmentOptions.Any())
+                    {
+                        <div class="payment-create-inline-warning">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            Hiện không có lượt ghi danh phù hợp để lập phiếu thu.
+                        </div>
+                    }
+                </div>
+
+                <!-- Amount -->
+                <div class="payment-create-group">
+                    @Html.LabelFor(
+                        m => m.AmountPaid,
+                        "Số tiền thanh toán (VNĐ) *",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.AmountPaid,
+                        new
+                        {
+                            @class = "payment-create-control",
+                            type = "number",
+                            min = "1000",
+                            max = "500000000",
+                            step = "1000",
+                            placeholder = "Nhập số tiền cần thu"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.AmountPaid,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+
+                    <small class="payment-create-hint">
+                        Số tiền phải từ 1.000 đến 500.000.000 VNĐ.
+                    </small>
+                </div>
+
+                <!-- Payment date -->
+                <div class="payment-create-group">
+                    @Html.LabelFor(
+                        m => m.PaymentDate,
+                        "Ngày thanh toán *",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.PaymentDate,
+                        "{0:yyyy-MM-ddTHH:mm}",
+                        new
+                        {
+                            @class = "payment-create-control",
+                            type = "datetime-local",
+                            required = "required"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.PaymentDate,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+                </div>
+
+                <!-- Receipt -->
+                <div class="payment-create-group payment-create-full">
+                    @Html.LabelFor(
+                        m => m.ReceiptNumber,
+                        "Mã biên lai",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.ReceiptNumber,
+                        new
+                        {
+                            @class = "payment-create-control",
+                            maxlength = "50",
+                            placeholder = "Mã biên lai được tạo tự động"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.ReceiptNumber,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+
+                    <small class="payment-create-hint">
+                        Hệ thống tự tạo mã biên lai khi mở form.
+                        Có thể giữ nguyên mã đã tạo.
+                    </small>
+                </div>
+
+                <!-- Payment method -->
+                <div class="payment-create-group">
+                    @Html.LabelFor(
+                        m => m.PaymentMethod,
+                        "Phương thức thanh toán *",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    @Html.DropDownListFor(
+                        m => m.PaymentMethod,
+                        methodOptions,
+                        new { @class = "payment-create-control" }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.PaymentMethod,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+                </div>
+
+                <!-- Payment status -->
+                <div class="payment-create-group">
+                    @Html.LabelFor(
+                        m => m.PaymentStatus,
+                        "Trạng thái thanh toán *",
+                        new { @class = "payment-create-label" }
+                    )
+
+                    @Html.DropDownListFor(
+                        m => m.PaymentStatus,
+                        paymentStatusOptions,
+                        new { @class = "payment-create-control" }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.PaymentStatus,
+                        "",
+                        new { @class = "payment-create-error" }
+                    )
+
+                    <small class="payment-create-hint">
+                        Trạng thái ban đầu mặc định là Đã thanh toán đủ.
+                    </small>
+                </div>
+
+            </div>
+
+            <!-- Important notice -->
+            <div class="payment-create-notice">
+                <i class="glyphicon glyphicon-info-sign"></i>
+
+                <div>
+                    <strong>Lưu ý khi lập phiếu thu</strong>
+
+                    <p>
+                        Mỗi lượt ghi danh chỉ được tạo một giao dịch theo
+                        quy tắc hiện tại. Kiểm tra học viên, lớp học, số tiền
+                        và trạng thái trước khi xác nhận.
+                    </p>
+
+                    <p>
+                        Khi chọn trạng thái Paid hoặc Completed, Controller
+                        hiện tại sẽ chuyển ghi danh sang trạng thái Active.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="payment-create-actions">
+
+                <a href="@Url.Action("Index", "Payments")"
+                   class="payment-create-btn payment-create-cancel">
+                    <i class="glyphicon glyphicon-arrow-left"></i>
+                    Quay lại
+                </a>
+
+                <button type="submit"
+                        class="payment-create-btn payment-create-submit">
+                    <i class="glyphicon glyphicon-floppy-disk"></i>
+                    Lưu phiếu thu
+                </button>
+
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

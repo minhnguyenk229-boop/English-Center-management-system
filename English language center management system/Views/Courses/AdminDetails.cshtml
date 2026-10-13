@@ -1,0 +1,729 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Courses.CourseAdminDetailViewModel
+
+@using System
+@using System.Linq
+
+@{
+    ViewBag.Title = "Chi tiết khóa học";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var course = Model.Course;
+    var classes = Model.Classes;
+
+    string description = string.IsNullOrWhiteSpace(course.Description)
+        ? "Chưa cập nhật mô tả khóa học."
+        : course.Description;
+
+    string syllabus = string.IsNullOrWhiteSpace(course.Syllabus)
+        ? "Chưa cập nhật khung chương trình."
+        : course.Syllabus;
+}
+
+<style>
+    .course-detail-page {
+        padding: 24px;
+        color: #26344c;
+    }
+
+    .course-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .course-detail-eyebrow {
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .course-detail-header h1 {
+        margin: 0 0 9px;
+        color: #25324a;
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .course-detail-header p {
+        color: #8995aa;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .course-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .course-detail-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 11px 15px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: .2s ease;
+        white-space: nowrap;
+    }
+
+    .course-detail-btn-back {
+        background: #fff;
+        color: #526078;
+        border: 1px solid #dce3ed;
+    }
+
+        .course-detail-btn-back:hover {
+            background: #f4f6fa;
+            color: #25324a;
+        }
+
+    .course-detail-btn-edit {
+        background: #c92828;
+        color: #fff;
+        border: 1px solid #c92828;
+    }
+
+        .course-detail-btn-edit:hover {
+            background: #a91f1f;
+            border-color: #a91f1f;
+            color: #fff;
+        }
+
+    .course-detail-btn-delete {
+        background: #fff;
+        color: #c92828;
+        border: 1px solid #f1caca;
+    }
+
+        .course-detail-btn-delete:hover {
+            background: #fff0f0;
+            color: #a91f1f;
+        }
+
+    .course-detail-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 17px;
+        margin-bottom: 24px;
+    }
+
+    .course-detail-kpi {
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4eaf2;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 4px 15px rgba(25, 42, 70, .035);
+    }
+
+        .course-detail-kpi::after {
+            content: "";
+            position: absolute;
+            width: 75px;
+            height: 75px;
+            right: -27px;
+            top: -28px;
+            border-radius: 50%;
+            background: var(--kpi-soft);
+        }
+
+    .course-detail-kpi-label {
+        position: relative;
+        z-index: 1;
+        color: #78859b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .45px;
+        line-height: 1.6;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .course-detail-kpi-value {
+        position: relative;
+        z-index: 1;
+        color: #26344c;
+        font-size: 25px;
+        font-weight: 800;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .course-detail-kpi-sub {
+        position: relative;
+        z-index: 1;
+        margin-top: 8px;
+        color: #8995aa;
+        font-size: 12px;
+    }
+
+    .course-detail-kpi-revenue {
+        --kpi-soft: #e7f8ee;
+        border-top: 3px solid #198754;
+    }
+
+    .course-detail-kpi-students {
+        --kpi-soft: #e9f1ff;
+        border-top: 3px solid #2878e5;
+    }
+
+    .course-detail-kpi-classes {
+        --kpi-soft: #fff4d7;
+        border-top: 3px solid #e7a400;
+    }
+
+    .course-detail-kpi-tuition {
+        --kpi-soft: #e2f8fc;
+        border-top: 3px solid #0bbbd4;
+    }
+
+    .course-detail-panel {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4eaf2;
+        border-radius: 14px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 15px rgba(25, 42, 70, .035);
+    }
+
+    .course-detail-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+        .course-detail-panel-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: #26344c;
+        }
+
+    .course-detail-panel-body {
+        padding: 24px;
+    }
+
+    .course-detail-overview {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 28px;
+    }
+
+        .course-detail-overview h3 {
+            color: #35435b;
+            font-size: 14px;
+            font-weight: 800;
+            margin: 0 0 17px;
+        }
+
+    .course-detail-field {
+        margin-bottom: 19px;
+    }
+
+        .course-detail-field:last-child {
+            margin-bottom: 0;
+        }
+
+    .course-detail-field-label {
+        display: block;
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 7px;
+    }
+
+    .course-detail-field-value {
+        color: #344159;
+        font-size: 14px;
+        line-height: 1.8;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+    }
+
+    .course-detail-level {
+        display: inline-block;
+        padding: 6px 11px;
+        background: #e9f1ff;
+        color: #255bb2;
+        border-radius: 7px;
+        font-weight: 800;
+        font-size: 12px;
+    }
+
+    .course-detail-syllabus {
+        padding: 18px;
+        background: #f7f9fc;
+        border: 1px solid #e5eaf2;
+        border-radius: 10px;
+        color: #526078;
+        font-size: 14px;
+        line-height: 1.9;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+    }
+
+    .course-detail-section-subtitle {
+        margin-top: 6px;
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 400;
+    }
+
+    .course-detail-create-class {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 13px;
+        border-radius: 8px;
+        background: #c92828;
+        border: 1px solid #c92828;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: .2s ease;
+    }
+
+        .course-detail-create-class:hover {
+            background: #a91f1f;
+            color: #fff;
+        }
+
+    .course-detail-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .course-detail-table {
+        width: 100%;
+        min-width: 900px;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .course-detail-table thead th {
+            padding: 15px 16px;
+            background: #f6f8fb;
+            color: #728098;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+            text-align: left;
+            border-bottom: 1px solid #e7ecf3;
+            white-space: nowrap;
+        }
+
+        .course-detail-table tbody td {
+            padding: 17px 16px;
+            color: #526078;
+            font-size: 13px;
+            border-bottom: 1px solid #edf0f5;
+            vertical-align: middle;
+        }
+
+        .course-detail-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .course-detail-table tbody tr:hover {
+            background: #fafbfd;
+        }
+
+    .course-detail-class-name {
+        color: #26344c;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .course-detail-class-id {
+        color: #9aa4b5;
+        font-size: 11px;
+    }
+
+    .course-detail-capacity {
+        display: inline-block;
+        padding: 6px 9px;
+        border-radius: 7px;
+        background: #edf4ff;
+        color: #245bb5;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .course-detail-revenue {
+        color: #16804a;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .course-detail-status {
+        display: inline-block;
+        padding: 6px 9px;
+        border-radius: 7px;
+        background: #eef2f7;
+        color: #657188;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .course-detail-status-open,
+    .course-detail-status-studying {
+        background: #e7f8ee;
+        color: #087443;
+    }
+
+    .course-detail-status-completed {
+        background: #edf0f5;
+        color: #657188;
+    }
+
+    .course-detail-status-cancelled {
+        background: #fff0f0;
+        color: #b42323;
+    }
+
+    .course-detail-class-link {
+        display: inline-block;
+        padding: 8px 11px;
+        border-radius: 7px;
+        background: #edf4ff;
+        color: #245bb5;
+        font-weight: 700;
+        font-size: 12px;
+        text-decoration: none !important;
+        white-space: nowrap;
+    }
+
+        .course-detail-class-link:hover {
+            background: #dceaff;
+            color: #184a9e;
+        }
+
+    .course-detail-empty {
+        text-align: center !important;
+        padding: 42px 20px !important;
+    }
+
+    .course-detail-empty-icon {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 13px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f4f9;
+        color: #8995aa;
+        font-size: 23px;
+    }
+
+    .course-detail-empty strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #526078;
+        font-size: 14px;
+    }
+
+    .course-detail-empty span {
+        color: #8995aa;
+        font-size: 12px;
+    }
+
+    @@media (max-width: 1200px) {
+        .course-detail-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .course-detail-page {
+            padding: 15px;
+        }
+
+        .course-detail-header h1 {
+            font-size: 23px;
+        }
+
+        .course-detail-overview {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .course-detail-panel-body {
+            padding: 18px;
+        }
+
+        .course-detail-kpi {
+            padding: 17px;
+        }
+
+        .course-detail-kpi-value {
+            font-size: 21px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .course-detail-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .course-detail-actions {
+            width: 100%;
+        }
+
+            .course-detail-actions a {
+                flex: 1;
+            }
+    }
+</style>
+
+<div class="course-detail-page">
+
+    <div class="course-detail-header">
+        <div>
+            <div class="course-detail-eyebrow">English Language Center / Khóa học</div>
+            <h1>@course.CourseName</h1>
+            <p>Thông tin tổng quan, chỉ số hoạt động và danh sách lớp thuộc khóa học.</p>
+        </div>
+
+        <div class="course-detail-actions">
+            <a href="@Url.Action("AdminIndex", "Courses")"
+               class="course-detail-btn course-detail-btn-back">
+                ← Danh sách
+            </a>
+
+            <a href="@Url.Action("Edit", "Courses", new { id = course.Id })"
+               class="course-detail-btn course-detail-btn-edit">
+                ✎ Sửa khóa học
+            </a>
+
+            <a href="@Url.Action("Delete", "Courses", new { id = course.Id })"
+               class="course-detail-btn course-detail-btn-delete">
+                Xóa khóa học
+            </a>
+        </div>
+    </div>
+
+    <div class="course-detail-kpis">
+
+        <div class="course-detail-kpi course-detail-kpi-revenue">
+            <div class="course-detail-kpi-label">Doanh thu khóa học</div>
+            <div class="course-detail-kpi-value">
+                @Model.TotalRevenueGenerated.ToString("N0") đ
+            </div>
+            <div class="course-detail-kpi-sub">Tổng khoản thanh toán đã ghi nhận</div>
+        </div>
+
+        <div class="course-detail-kpi course-detail-kpi-students">
+            <div class="course-detail-kpi-label">Tổng học viên</div>
+            <div class="course-detail-kpi-value">@Model.TotalStudentsCount</div>
+            <div class="course-detail-kpi-sub">Học viên có ghi danh đang hoạt động hoặc được duyệt</div>
+        </div>
+
+        <div class="course-detail-kpi course-detail-kpi-classes">
+            <div class="course-detail-kpi-label">Lớp đang mở / đang học</div>
+            <div class="course-detail-kpi-value">
+                @Model.ActiveClassesCount / @Model.TotalClassesCount
+            </div>
+            <div class="course-detail-kpi-sub">Số lớp hoạt động trên tổng số lớp</div>
+        </div>
+
+        <div class="course-detail-kpi course-detail-kpi-tuition">
+            <div class="course-detail-kpi-label">Học phí quy định</div>
+            <div class="course-detail-kpi-value">
+                @course.TuitionFee.ToString("N0") đ
+            </div>
+            <div class="course-detail-kpi-sub">Học phí được thiết lập cho khóa học</div>
+        </div>
+
+    </div>
+
+    <section class="course-detail-panel">
+        <div class="course-detail-panel-header">
+            <h2>Thông tin khóa học</h2>
+        </div>
+
+        <div class="course-detail-panel-body">
+            <div class="course-detail-overview">
+
+                <div>
+                    <h3>Thông tin chung</h3>
+
+                    <div class="course-detail-field">
+                        <span class="course-detail-field-label">Tên khóa học</span>
+                        <div class="course-detail-field-value">
+                            <strong>@course.CourseName</strong>
+                        </div>
+                    </div>
+
+                    <div class="course-detail-field">
+                        <span class="course-detail-field-label">Cấp độ</span>
+                        <div class="course-detail-field-value">
+                            <span class="course-detail-level">@course.Level</span>
+                        </div>
+                    </div>
+
+                    <div class="course-detail-field">
+                        <span class="course-detail-field-label">Thời lượng</span>
+                        <div class="course-detail-field-value">@course.Duration giờ học</div>
+                    </div>
+
+                    <div class="course-detail-field">
+                        <span class="course-detail-field-label">Học phí</span>
+                        <div class="course-detail-field-value">
+                            <strong>@course.TuitionFee.ToString("N0") VNĐ</strong>
+                        </div>
+                    </div>
+
+                    <div class="course-detail-field">
+                        <span class="course-detail-field-label">Mô tả khóa học</span>
+                        <div class="course-detail-field-value">@description</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3>Khung chương trình (Syllabus)</h3>
+                    <div class="course-detail-syllabus">@syllabus</div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="course-detail-panel">
+
+        <div class="course-detail-panel-header">
+            <div>
+                <h2>Danh sách lớp học thuộc khóa học</h2>
+                <div class="course-detail-section-subtitle">
+                    @(classes == null ? 0 : classes.Count) lớp học được liên kết với khóa học này
+                </div>
+            </div>
+
+            <a href="@Url.Action("Create", "Classes")"
+               class="course-detail-create-class">
+                + Mở lớp mới
+            </a>
+        </div>
+
+        <div class="course-detail-table-wrap">
+            <table class="course-detail-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên lớp</th>
+                        <th>Giáo viên phụ trách</th>
+                        <th>Phòng học</th>
+                        <th>Sĩ số</th>
+                        <th>Doanh thu lớp</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (classes != null && classes.Any())
+                    {
+                        var index = 1;
+
+                        foreach (var item in classes)
+                        {
+                            string status = item.Class.Status ?? "Chưa cập nhật";
+                            string statusLower = status.ToLowerInvariant();
+
+                            string statusClass =
+                                statusLower == "open" ? "course-detail-status-open" :
+                                statusLower == "studying" ? "course-detail-status-studying" :
+                                statusLower == "completed" ? "course-detail-status-completed" :
+                                statusLower == "cancelled" ? "course-detail-status-cancelled" : "";
+
+                            <tr>
+                                <td>@(index++)</td>
+
+                                <td>
+                                    <div class="course-detail-class-name">
+                                        @item.Class.ClassName
+                                    </div>
+                                    <div class="course-detail-class-id">
+                                        Mã lớp: #@item.Class.Id
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @(item.Class.Teacher != null
+                                        ? item.Class.Teacher.FullName
+                                        : "Chưa phân công")
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.Class.Room)
+                                        ? "Chưa xếp phòng"
+                                        : item.Class.Room)
+                                </td>
+
+                                <td>
+                                    <span class="course-detail-capacity">
+                                        @item.EnrolledCount / @item.Class.MaxCapacity
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="course-detail-revenue">
+                                        @item.ClassRevenue.ToString("N0") đ
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="course-detail-status @statusClass">
+                                        @status
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <a href="@Url.Action("Details", "Classes", new { id = item.Class.Id })"
+                                       class="course-detail-class-link">
+                                        Chi tiết lớp →
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="course-detail-empty">
+                                <div class="course-detail-empty-icon">▤</div>
+                                <strong>Chưa có lớp học nào</strong>
+                                <span>Khóa học này chưa được liên kết với lớp học nào.</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+
+</div>

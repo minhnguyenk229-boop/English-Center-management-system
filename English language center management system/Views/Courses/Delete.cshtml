@@ -1,0 +1,511 @@
+﻿
+@model English_language_center_management_system.Models.Course
+
+@{
+    ViewBag.Title = "Xóa khóa học";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    int relatedClassesCount = ViewBag.RelatedClassesCount == null
+        ? 0
+        : (int)ViewBag.RelatedClassesCount;
+
+    string courseName = string.IsNullOrWhiteSpace(Model.CourseName)
+        ? "Chưa cập nhật tên khóa học"
+        : Model.CourseName;
+
+    string description = string.IsNullOrWhiteSpace(Model.Description)
+        ? "Chưa cập nhật mô tả"
+        : Model.Description;
+
+    string syllabus = string.IsNullOrWhiteSpace(Model.Syllabus)
+        ? "Chưa cập nhật khung chương trình"
+        : Model.Syllabus;
+
+    bool canDelete = relatedClassesCount == 0;
+}
+
+<style>
+    .course-delete-page {
+        padding: 24px;
+        color: #26344c;
+    }
+
+    .course-delete-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .course-delete-eyebrow {
+        margin-bottom: 8px;
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .course-delete-heading h1 {
+        margin: 0 0 8px;
+        color: #25324a;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .course-delete-heading p {
+        margin: 0;
+        color: #8995aa;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .course-delete-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 16px;
+        border: 1px solid #dce3ed;
+        border-radius: 9px;
+        background: #fff;
+        color: #526078;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: .2s ease;
+        white-space: nowrap;
+    }
+
+        .course-delete-back:hover {
+            background: #f4f6fa;
+            color: #25324a;
+        }
+
+    .course-delete-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        align-items: start;
+        gap: 22px;
+    }
+
+    .course-delete-card {
+        overflow: hidden;
+        border: 1px solid #e3e9f1;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(26, 42, 69, .04);
+    }
+
+    .course-delete-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #edf0f5;
+        color: #25324a;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .course-delete-card-body {
+        padding: 24px;
+    }
+
+    .course-delete-course-identity {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 22px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    .course-delete-course-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 62px;
+        height: 62px;
+        flex-shrink: 0;
+        border-radius: 17px;
+        background: #fff0f0;
+        color: #c92828;
+        font-size: 27px;
+        font-weight: 800;
+    }
+
+    .course-delete-course-identity h2 {
+        margin: 0 0 7px;
+        color: #25324a;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .course-delete-course-identity p {
+        margin: 0;
+        color: #8995aa;
+        font-size: 13px;
+    }
+
+    .course-delete-facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .course-delete-fact {
+        min-width: 0;
+        padding: 17px;
+        border: 1px solid #edf0f5;
+        border-radius: 11px;
+        background: #fafbfd;
+    }
+
+    .course-delete-fact-label {
+        display: block;
+        margin-bottom: 9px;
+        color: #8995aa;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .course-delete-fact-value {
+        display: block;
+        color: #26344c;
+        font-size: 19px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+        .course-delete-fact-value.course-delete-fee {
+            color: #16804a;
+        }
+
+    .course-delete-section {
+        margin-top: 22px;
+    }
+
+        .course-delete-section h3 {
+            margin: 0 0 10px;
+            color: #344159;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+    .course-delete-description {
+        padding: 16px;
+        border: 1px solid #e5eaf2;
+        border-radius: 10px;
+        background: #f7f9fc;
+        color: #526078;
+        font-size: 13px;
+        line-height: 1.9;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+    }
+
+    .course-delete-level {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 7px;
+        background: #e9f1ff;
+        color: #245bb5;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .course-delete-warning-card {
+        overflow: hidden;
+        border: 1px solid #f1d4d4;
+        border-top: 4px solid #c92828;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(26, 42, 69, .04);
+    }
+
+    .course-delete-warning-body {
+        padding: 24px;
+    }
+
+    .course-delete-warning-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        margin-bottom: 18px;
+        border-radius: 16px;
+        background: #fff0f0;
+        color: #c92828;
+        font-size: 27px;
+        font-weight: 900;
+    }
+
+    .course-delete-warning-body h3 {
+        margin: 0 0 12px;
+        color: #25324a;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    .course-delete-warning-body p {
+        margin: 0 0 18px;
+        color: #738097;
+        font-size: 13px;
+        line-height: 1.9;
+    }
+
+    .course-delete-warning-note {
+        margin-bottom: 20px;
+        padding: 14px;
+        border: 1px solid #ffdede;
+        border-radius: 9px;
+        background: #fff4f4;
+        color: #a92323;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+
+    .course-delete-blocked {
+        margin-bottom: 20px;
+        padding: 14px;
+        border: 1px solid #f5dfb5;
+        border-radius: 9px;
+        background: #fff8e8;
+        color: #895d0c;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+
+    .course-delete-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .course-delete-confirm,
+    .course-delete-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 15px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .course-delete-confirm {
+        border: 1px solid #c92828;
+        background: #c92828;
+        color: #fff;
+    }
+
+        .course-delete-confirm:hover {
+            border-color: #a91f1f;
+            background: #a91f1f;
+            color: #fff;
+        }
+
+        .course-delete-confirm:disabled {
+            border-color: #d8a4a4;
+            background: #d8a4a4;
+            cursor: not-allowed;
+        }
+
+    .course-delete-cancel {
+        border: 1px solid #dce3ed;
+        background: #fff;
+        color: #526078;
+    }
+
+        .course-delete-cancel:hover {
+            background: #f4f6fa;
+            color: #25324a;
+        }
+
+    @@media (max-width: 1000px) {
+        .course-delete-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .course-delete-page {
+            padding: 15px;
+        }
+
+        .course-delete-heading h1 {
+            font-size: 23px;
+        }
+
+        .course-delete-card-body,
+        .course-delete-warning-body {
+            padding: 18px;
+        }
+
+        .course-delete-facts {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="course-delete-page">
+
+    <div class="course-delete-heading">
+        <div>
+            <div class="course-delete-eyebrow">
+                English Language Center / Quản lý khóa học
+            </div>
+            <h1>Xóa khóa học</h1>
+            <p>Kiểm tra thông tin và điều kiện trước khi xóa khóa học khỏi hệ thống.</p>
+        </div>
+
+        <a href="@Url.Action("AdminIndex", "Courses")"
+           class="course-delete-back">
+            ← Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="course-delete-grid">
+
+        <section class="course-delete-card">
+            <div class="course-delete-card-header">
+                Thông tin khóa học
+            </div>
+
+            <div class="course-delete-card-body">
+
+                <div class="course-delete-course-identity">
+                    <div class="course-delete-course-icon">▤</div>
+                    <div>
+                        <h2>@courseName</h2>
+                        <p>Mã khóa học: #@Model.Id</p>
+                    </div>
+                </div>
+
+                <div class="course-delete-facts">
+
+                    <div class="course-delete-fact">
+                        <span class="course-delete-fact-label">Cấp độ</span>
+                        <span class="course-delete-fact-value">
+                            <span class="course-delete-level">@Model.Level</span>
+                        </span>
+                    </div>
+
+                    <div class="course-delete-fact">
+                        <span class="course-delete-fact-label">Thời lượng</span>
+                        <span class="course-delete-fact-value">
+                            @Model.Duration giờ
+                        </span>
+                    </div>
+
+                    <div class="course-delete-fact">
+                        <span class="course-delete-fact-label">Học phí quy định</span>
+                        <span class="course-delete-fact-value course-delete-fee">
+                            @Model.TuitionFee.ToString("N0") VNĐ
+                        </span>
+                    </div>
+
+                    <div class="course-delete-fact">
+                        <span class="course-delete-fact-label">Lớp học liên kết</span>
+                        <span class="course-delete-fact-value">
+                            @relatedClassesCount
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="course-delete-section">
+                    <h3>Mô tả khóa học</h3>
+                    <div class="course-delete-description">@description</div>
+                </div>
+
+                <div class="course-delete-section">
+                    <h3>Khung chương trình (Syllabus)</h3>
+                    <div class="course-delete-description">@syllabus</div>
+                </div>
+
+            </div>
+        </section>
+
+        <aside class="course-delete-warning-card">
+            <div class="course-delete-warning-body">
+
+                <div class="course-delete-warning-icon">!</div>
+
+                @if (canDelete)
+                {
+                    <h3>Xác nhận xóa</h3>
+
+                    <p>
+                        Bạn đang chuẩn bị xóa khóa học
+                        <strong>@courseName</strong>.
+                        Vui lòng kiểm tra thông tin trước khi xác nhận.
+                    </p>
+
+                    <div class="course-delete-warning-note">
+                        <strong>Cảnh báo:</strong>
+                        Thao tác này sẽ xóa khóa học khỏi hệ thống và không thể
+                        hoàn tác bằng nút quay lại.
+                    </div>
+
+                    using (Html.BeginForm("Delete", "Courses", new { id = Model.Id }, FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="course-delete-actions">
+                            <button type="submit"
+                                    class="course-delete-confirm"
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa khóa học này không?');">
+                                Xác nhận xóa khóa học
+                            </button>
+
+                            <a href="@Url.Action("AdminIndex", "Courses")"
+                               class="course-delete-cancel">
+                                Hủy bỏ
+                            </a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <h3>Chưa thể xóa khóa học</h3>
+
+                    <p>
+                        Khóa học <strong>@courseName</strong> hiện có
+                        <strong>@relatedClassesCount lớp học</strong> liên kết.
+                    </p>
+
+                    <div class="course-delete-blocked">
+                        <strong>Không thể thực hiện xóa.</strong>
+                        Hãy xử lý các lớp học liên kết trước. Hệ thống cũng sẽ
+                        kiểm tra điều kiện này ở phía máy chủ để bảo vệ dữ liệu.
+                    </div>
+
+                    <div class="course-delete-actions">
+                        <a href="@Url.Action("AdminIndex", "Courses")"
+                           class="course-delete-cancel">
+                            Quay lại danh sách khóa học
+                        </a>
+
+                        <a href="@Url.Action("AdminDetails", "Courses", new { id = Model.Id })"
+                           class="course-delete-confirm">
+                            Xem chi tiết khóa học
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </aside>
+
+    </div>
+
+</div>

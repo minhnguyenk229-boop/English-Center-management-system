@@ -1,0 +1,371 @@
+﻿@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Web.Mvc
+@using English_language_center_management_system.Models
+@using English_language_center_management_system.Models.ViewModels.Home
+
+@model TeacherClassResourcesViewModel
+
+@{
+    ViewBag.Title = "Bài tập và tài liệu lớp học";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    var classes = Model.AvailableClasses ?? new List<Class>();
+    var assignments = Model.Assignments ?? new List<Assignment>();
+    var materials = Model.Materials ?? new List<CourseMaterial>();
+
+    var classOptions = classes.Select(c => new SelectListItem
+    {
+        Value = c.Id.ToString(),
+        Text = c.ClassName,
+        Selected = Model.SelectedClassId.HasValue
+            && Model.SelectedClassId.Value == c.Id
+    }).ToList();
+}
+
+<div class="teacher-resources-page">
+
+    <div class="teacher-resources-header">
+        <div>
+            <div class="teacher-resources-eyebrow">TEACHER PORTAL</div>
+            <h1>Bài tập & tài liệu học tập</h1>
+            <p>Tạo bài tập, thiết lập hạn nộp và chia sẻ tài liệu cho từng lớp.</p>
+        </div>
+
+        <a href="@Url.Action("TeacherDashboard", "Home")"
+           class="teacher-resources-back">
+            ← Quay lại tổng quan
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="teacher-resources-alert success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="teacher-resources-alert error">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="teacher-resources-card">
+        <label for="classId">Chọn lớp phụ trách</label>
+
+        @using (Html.BeginForm(
+            "TeacherClassResources",
+            "Home",
+            FormMethod.Get))
+        {
+            @Html.DropDownList(
+                "classId",
+                classOptions,
+                "-- Chọn lớp --",
+                new
+                {
+                    id = "classId",
+                    @class = "teacher-resources-select",
+                    onchange = "this.form.submit();"
+                })
+
+            <noscript>
+                <button type="submit" class="teacher-resources-btn">
+                    Xem lớp
+                </button>
+            </noscript>
+        }
+    </div>
+
+    @if (Model.SelectedClass == null)
+    {
+        <div class="teacher-resources-empty">
+            <h3>Chưa có lớp được phân công</h3>
+            <p>Bạn cần được phân công lớp trước khi tạo bài tập hoặc đăng tài liệu.</p>
+        </div>
+    }
+    else
+    {
+        <div class="teacher-resources-class-info">
+            <div>
+                <span>Tên lớp</span>
+                <strong>@Model.SelectedClass.ClassName</strong>
+            </div>
+
+            <div>
+                <span>Khóa học</span>
+                <strong>
+                    @(Model.SelectedClass.Course != null
+                        ? Model.SelectedClass.Course.CourseName
+                        : "Chưa cập nhật")
+                </strong>
+            </div>
+
+            <div>
+                <span>Bài tập đã tạo</span>
+                <strong>@assignments.Count</strong>
+            </div>
+
+            <div>
+                <span>Tài liệu đã đăng</span>
+                <strong>@materials.Count</strong>
+            </div>
+        </div>
+
+        <div class="teacher-resources-grid">
+
+            <!-- FORM TẠO BÀI TẬP -->
+            <section class="teacher-resources-card">
+                <div class="teacher-resources-section-title">
+                    <span class="teacher-resources-icon">✎</span>
+                    <div>
+                        <h2>Tạo bài tập mới</h2>
+                        <p>Đặt tiêu đề và thời hạn nộp bài.</p>
+                    </div>
+                </div>
+
+                @using (Html.BeginForm(
+                    "CreateTeacherAssignment",
+                    "Home",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.SelectedClassId)
+
+                    <div class="teacher-resources-field">
+                        <label for="NewAssignmentTitle">Tên bài tập</label>
+                        @Html.TextBoxFor(
+                            m => m.NewAssignmentTitle,
+                            new
+                            {
+                                @class = "teacher-resources-input",
+                                maxlength = "255",
+                                placeholder = "Ví dụ: Unit 1 - Vocabulary",
+                                required = "required"
+                            })
+                    </div>
+
+                    <div class="teacher-resources-field">
+                        <label for="NewAssignmentDueDate">Hạn nộp</label>
+                        @Html.TextBoxFor(
+                            m => m.NewAssignmentDueDate,
+                            "{0:yyyy-MM-ddTHH:mm}",
+                            new
+                            {
+                                @class = "teacher-resources-input",
+                                type = "datetime-local",
+                                required = "required"
+                            })
+                    </div>
+
+                    <button type="submit"
+                            class="teacher-resources-btn">
+                        + Tạo bài tập
+                    </button>
+                }
+            </section>
+
+            <!-- FORM ĐĂNG TÀI LIỆU -->
+            <section class="teacher-resources-card">
+                <div class="teacher-resources-section-title">
+                    <span class="teacher-resources-icon">↗</span>
+                    <div>
+                        <h2>Đăng tài liệu học tập</h2>
+                        <p>Chia sẻ đường dẫn tài liệu với học viên.</p>
+                    </div>
+                </div>
+
+                @using (Html.BeginForm(
+                    "CreateTeacherMaterial",
+                    "Home",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.SelectedClassId)
+
+                    <div class="teacher-resources-field">
+                        <label for="NewMaterialTitle">Tên tài liệu</label>
+                        @Html.TextBoxFor(
+                            m => m.NewMaterialTitle,
+                            new
+                            {
+                                @class = "teacher-resources-input",
+                                maxlength = "255",
+                                placeholder = "Ví dụ: Tài liệu ôn tập Unit 1",
+                                required = "required"
+                            })
+                    </div>
+
+                    <div class="teacher-resources-field">
+                        <label for="NewMaterialFileUrl">Đường dẫn tài liệu</label>
+                        @Html.TextBoxFor(
+                            m => m.NewMaterialFileUrl,
+                            new
+                            {
+                                @class = "teacher-resources-input",
+                                type = "url",
+                                maxlength = "500",
+                                placeholder = "https://...",
+                                required = "required"
+                            })
+                    </div>
+
+                    <p class="teacher-resources-note">
+                        Dùng liên kết chia sẻ Google Drive, OneDrive hoặc
+                        một đường dẫn HTTP/HTTPS mà học viên có quyền truy cập.
+                    </p>
+
+                    <button type="submit"
+                            class="teacher-resources-btn">
+                        + Đăng tài liệu
+                    </button>
+                }
+            </section>
+
+        </div>
+
+        <!-- DANH SÁCH BÀI TẬP -->
+        <section class="teacher-resources-card teacher-resources-list-card">
+            <div class="teacher-resources-list-heading">
+                <div>
+                    <h2>Danh sách bài tập</h2>
+                    <p>Các bài tập đã tạo cho lớp này.</p>
+                </div>
+
+                <span class="teacher-resources-count">
+                    @assignments.Count bài tập
+                </span>
+            </div>
+
+            @if (assignments.Count == 0)
+            {
+                <div class="teacher-resources-list-empty">
+                    Chưa có bài tập nào.
+                </div>
+            }
+            else
+            {
+                <div class="teacher-resources-table-wrap">
+                    <table class="teacher-resources-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên bài tập</th>
+                                <th>Hạn nộp</th>
+                                <th>Trạng thái hạn nộp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < assignments.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <strong>@assignments[i].Title</strong>
+                                    </td>
+                                    <td>
+                                        @assignments[i].DueDate.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td>
+                                        @if (assignments[i].DueDate < DateTime.Now)
+                                        {
+                                            <span class="teacher-resources-badge expired">
+                                                Đã quá hạn
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="teacher-resources-badge active">
+                                                Còn hạn
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <!-- DANH SÁCH TÀI LIỆU -->
+        <section class="teacher-resources-card teacher-resources-list-card">
+            <div class="teacher-resources-list-heading">
+                <div>
+                    <h2>Tài liệu đã đăng</h2>
+                    <p>Các đường dẫn tài liệu dành cho học viên trong lớp.</p>
+                </div>
+
+                <span class="teacher-resources-count">
+                    @materials.Count tài liệu
+                </span>
+            </div>
+
+            @if (materials.Count == 0)
+            {
+                <div class="teacher-resources-list-empty">
+                    Chưa có tài liệu nào.
+                </div>
+            }
+            else
+            {
+                <div class="teacher-resources-table-wrap">
+                    <table class="teacher-resources-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên tài liệu</th>
+                                <th>Ngày đăng</th>
+                                <th>Đường dẫn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < materials.Count; i++)
+                            {
+                                Uri parsedUri;
+
+                                bool safeUrl =
+                                    Uri.TryCreate(
+                                        materials[i].FileUrl,
+                                        UriKind.Absolute,
+                                        out parsedUri) &&
+                                    (parsedUri.Scheme == Uri.UriSchemeHttp ||
+                                     parsedUri.Scheme == Uri.UriSchemeHttps);
+
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <strong>@materials[i].Title</strong>
+                                    </td>
+                                    <td>
+                                        @materials[i].UploadedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td>
+                                        @if (safeUrl)
+                                        {
+                                            <a href="@materials[i].FileUrl"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="teacher-resources-file-link">
+                                                Mở tài liệu ↗
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="teacher-resources-note">
+                                                Đường dẫn không hợp lệ
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>

@@ -1,0 +1,58 @@
+﻿@model English_language_center_management_system.Models.AssessmentScore
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>AssessmentScore</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Enrollment.Status)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Enrollment.Status)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MidtermScore)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MidtermScore)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.FinalScore)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.FinalScore)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TotalScore)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TotalScore)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.LearningOutcome)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.LearningOutcome)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.EnrollmentId }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

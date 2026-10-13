@@ -1,0 +1,241 @@
+﻿
+@model English_language_center_management_system.Models.Enrollment
+
+@using System
+
+@{
+    ViewBag.Title = "Xác nhận xóa ghi danh";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var studentName = Model.Student != null
+        ? (String.IsNullOrWhiteSpace(Model.Student.FullName)
+            ? Model.Student.Username
+            : Model.Student.FullName)
+        : "Không có thông tin học viên";
+
+    var studentUsername = Model.Student != null
+        ? Model.Student.Username
+        : "Không xác định";
+
+    var studentEmail = Model.Student != null
+        ? Model.Student.Email
+        : "Chưa có email";
+
+    var className = Model.Class != null
+        ? Model.Class.ClassName
+        : "Không có thông tin lớp học";
+
+    var roomName = Model.Class != null &&
+                   !String.IsNullOrWhiteSpace(Model.Class.Room)
+        ? Model.Class.Room
+        : "Chưa xếp phòng";
+
+    var statusText = "Chưa xác định";
+    var statusClass = "enrollment-delete-status-default";
+
+    switch (Model.Status)
+    {
+        case "Pending":
+            statusText = "Chờ duyệt";
+            statusClass = "enrollment-delete-status-pending";
+            break;
+
+        case "Approved":
+        case "Confirmed":
+            statusText = "Đã duyệt";
+            statusClass = "enrollment-delete-status-approved";
+            break;
+
+        case "Active":
+        case "Studying":
+            statusText = "Đang học";
+            statusClass = "enrollment-delete-status-active";
+            break;
+
+        case "Completed":
+            statusText = "Hoàn thành";
+            statusClass = "enrollment-delete-status-completed";
+            break;
+
+        case "Rejected":
+            statusText = "Đã từ chối";
+            statusClass = "enrollment-delete-status-rejected";
+            break;
+
+        case "Cancelled":
+        case "Withdrawn":
+            statusText = "Đã hủy";
+            statusClass = "enrollment-delete-status-cancelled";
+            break;
+    }
+}
+
+<div class="admin-enrollment-delete-page">
+
+    <!-- Header -->
+    <div class="enrollment-delete-header">
+        <div>
+            <div class="enrollment-delete-eyebrow">
+                QUẢN LÝ ĐÀO TẠO
+            </div>
+
+            <h2>Xác nhận xóa ghi danh</h2>
+
+            <p>
+                Kiểm tra thông tin đăng ký trước khi thực hiện thao tác.
+            </p>
+        </div>
+
+        <div class="enrollment-delete-header-icon">
+            <i class="glyphicon glyphicon-trash"></i>
+        </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="enrollment-delete-card">
+
+        <!-- Warning -->
+        <div class="enrollment-delete-warning">
+            <div class="enrollment-delete-warning-icon">
+                <i class="glyphicon glyphicon-exclamation-sign"></i>
+            </div>
+
+            <div>
+                <h3>Bạn đang chuẩn bị xóa ghi danh</h3>
+
+                <p>
+                    Hãy kiểm tra học viên và lớp học bên dưới.
+                    Chỉ xác nhận khi bạn chắc chắn muốn xóa bản ghi này.
+                </p>
+            </div>
+        </div>
+
+        <!-- Enrollment summary -->
+        <div class="enrollment-delete-profile">
+            <div class="enrollment-delete-avatar">
+                @(!String.IsNullOrWhiteSpace(studentName)
+                    ? studentName.Substring(0, 1).ToUpper()
+                    : "H")
+            </div>
+
+            <div class="enrollment-delete-profile-info">
+                <span class="enrollment-delete-record-id">
+                    MÃ GHI DANH #@Model.Id
+                </span>
+
+                <h3>@studentName</h3>
+
+                <p>
+                    <i class="glyphicon glyphicon-education"></i>
+                    @className
+                </p>
+            </div>
+
+            <div class="enrollment-delete-profile-status">
+                <span class="enrollment-delete-status @statusClass">
+                    @statusText
+                </span>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="enrollment-delete-section">
+            <h4>
+                <i class="glyphicon glyphicon-list-alt"></i>
+                Thông tin ghi danh
+            </h4>
+
+            <div class="enrollment-delete-details">
+
+                <div class="enrollment-delete-detail">
+                    <span>Mã ghi danh</span>
+                    <strong>#@Model.Id</strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Ngày ghi danh</span>
+                    <strong>
+                        @Model.EnrollmentDate.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Học viên</span>
+                    <strong>@studentName</strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Tài khoản</span>
+                    <strong>@studentUsername</strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Email</span>
+                    <strong class="enrollment-delete-break">
+                        @studentEmail
+                    </strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Lớp học</span>
+                    <strong>@className</strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Phòng học</span>
+                    <strong>@roomName</strong>
+                </div>
+
+                <div class="enrollment-delete-detail">
+                    <span>Trạng thái</span>
+                    <strong>@statusText</strong>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Important notice -->
+        <div class="enrollment-delete-notice">
+            <i class="glyphicon glyphicon-info-sign"></i>
+
+            <div>
+                <strong>Lưu ý trước khi xóa</strong>
+
+                <p>
+                    Theo quy tắc hiện tại, hệ thống sẽ từ chối xóa nếu ghi danh
+                    này đã có giao dịch thanh toán. Nếu chưa phát sinh giao dịch,
+                    Controller sẽ thực hiện xóa bản ghi sau khi bạn xác nhận.
+                </p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        @using (Html.BeginForm(
+            "Delete",
+            "Enrollments",
+            new { id = Model.Id },
+            FormMethod.Post,
+            new { @class = "enrollment-delete-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="enrollment-delete-actions">
+
+                <a href="@Url.Action("Index", "Enrollments")"
+                   class="enrollment-delete-btn enrollment-delete-cancel">
+                    <i class="glyphicon glyphicon-arrow-left"></i>
+                    Hủy và quay lại
+                </a>
+
+                <button type="submit"
+                        class="enrollment-delete-btn enrollment-delete-submit"
+                        onclick="return confirm('Bạn có chắc chắn muốn xóa ghi danh #@Model.Id không?');">
+                    <i class="glyphicon glyphicon-trash"></i>
+                    Xác nhận xóa
+                </button>
+
+            </div>
+        }
+
+    </div>
+</div>

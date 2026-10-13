@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title - ELC Admin</title>
+
+    @Styles.Render("~/Content/css")
+</head>
+<body class="admin-body">
+
+    <div class="admin-shell">
+
+        <aside class="admin-sidebar">
+
+            <a href="@Url.Action("AdminDashboard", "Home")"
+               class="admin-brand">
+                <span class="admin-brand-mark">EC</span>
+
+                <span>
+                    ELC MANAGEMENT
+                    <small>ADMIN PORTAL</small>
+                </span>
+            </a>
+
+            <div class="admin-sidebar-caption">
+                QUẢN LÝ HỆ THỐNG
+            </div>
+
+            <nav class="admin-navigation">
+
+                <a href="@Url.Action("AdminDashboard", "Home")"
+                   class="admin-nav-link">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="@Url.Action("Index", "Users")"
+                   class="admin-nav-link">
+                    <span>♙</span>
+                    Người dùng
+                </a>
+
+                <a href="@Url.Action("AdminIndex", "Courses")"
+                   class="admin-nav-link">
+                    <span>▤</span>
+                    Khóa học
+                </a>
+
+                <a href="@Url.Action("Index", "Classes")"
+                   class="admin-nav-link">
+                    <span>▣</span>
+                    Lớp học
+                </a>
+
+                <a href="@Url.Action("Index", "Enrollments")"
+                   class="admin-nav-link">
+                    <span>✓</span>
+                    Ghi danh
+                </a>
+
+                <a href="@Url.Action("Index", "Payments")"
+                   class="admin-nav-link">
+                    <span>₫</span>
+                    Học phí
+                </a>
+
+                <a href="@Url.Action("Index", "Reports")"
+                   class="admin-nav-link">
+                    <span>▥</span>
+                    Báo cáo
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-bottom">
+
+                <div class="admin-sidebar-user">
+                    <span class="admin-avatar">
+                        A
+                    </span>
+
+                    <div>
+                        <strong>@(Session["FullName"] ?? "Admin")</strong>
+                        <small>Quản trị viên</small>
+                    </div>
+                </div>
+
+                @Html.ActionLink(
+                    "↪ Đăng xuất",
+                    "Logout",
+                    "Auth",
+                    null,
+                    new { @class = "admin-logout-link" }
+                )
+
+            </div>
+
+        </aside>
+
+        <div class="admin-main">
+
+            <header class="admin-topbar">
+                <div>
+                    <span>ENGLISH LANGUAGE CENTER</span>
+                    <strong>Hệ thống quản trị</strong>
+                </div>
+
+                <div class="admin-topbar-date">
+                    @DateTime.Now.ToString("dd/MM/yyyy")
+                </div>
+            </header>
+
+            <main class="admin-content">
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="admin-alert error">
+                        @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="admin-alert success">
+                        @TempData["SuccessMessage"]
+                    </div>
+                }
+
+                @RenderBody()
+
+            </main>
+
+            <footer class="admin-footer">
+                © @DateTime.Now.Year English Center · Hệ thống quản lý trung tâm Anh ngữ
+            </footer>
+
+        </div>
+
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

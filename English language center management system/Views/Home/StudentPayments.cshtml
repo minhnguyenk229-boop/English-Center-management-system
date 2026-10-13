@@ -1,0 +1,550 @@
+﻿
+@model English_language_center_management_system.Models.ViewModels.Home.StudentBillingViewModel
+
+@using System.Collections.Generic
+@using System.Linq
+@using English_language_center_management_system.Models
+
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewBag.Title = "Học phí và thanh toán";
+
+    var studentName = Model.StudentInfo != null
+        ? Model.StudentInfo.FullName
+        : "Học viên";
+
+    var enrollments = Model.Enrollments ?? new List<Enrollment>();
+    var payments = Model.PaymentHistory ?? new List<Payment>();
+
+    var billableEnrollments = enrollments
+        .Where(e =>
+            (e.Status == "Approved" || e.Status == "Active") &&
+            e.Class != null &&
+            e.Class.Course != null)
+        .ToList();
+}
+
+<div class="student-portal">
+
+    @* SIDEBAR *@
+    <aside class="student-sidebar">
+
+        <a href="@Url.Action("StudentDashboard", "Home")"
+           class="student-brand">
+            <span class="student-brand-mark">EC</span>
+            <span class="student-brand-text">
+                ELC PORTAL
+                <small>STUDENT SPACE</small>
+            </span>
+        </a>
+
+        <div class="student-sidebar-caption">
+            KHÔNG GIAN HỌC TẬP
+        </div>
+
+        <nav class="student-side-nav">
+
+            <a href="@Url.Action("StudentDashboard", "Home")"
+               class="student-nav-link">
+                <span class="student-nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="@Url.Action("Index", "Courses")"
+               class="student-nav-link">
+                <span class="student-nav-icon">＋</span>
+                Đăng ký lớp học
+            </a>
+
+            <a href="@Url.Action("StudentPayments", "Home")"
+               class="student-nav-link is-active">
+                <span class="student-nav-icon">₫</span>
+                Học phí &amp; hóa đơn
+            </a>
+
+        </nav>
+
+        <div class="student-sidebar-bottom">
+
+            <div class="student-support-card">
+                <span class="student-support-icon">?</span>
+                <strong>Cần hỗ trợ?</strong>
+                <p>Liên hệ trung tâm khi cần giải đáp học phí.</p>
+
+                @Html.ActionLink(
+                    "Liên hệ trung tâm →",
+                    "Contact",
+                    "Home",
+                    null,
+                    new { @class = "student-support-link" })
+            </div>
+
+            @Html.ActionLink(
+                "↪ Đăng xuất",
+                "Logout",
+                "Auth",
+                null,
+                new { @class = "student-logout-link" })
+
+        </div>
+
+    </aside>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="student-main">
+
+        <header class="student-topbar">
+
+            <div class="student-topbar-title">
+                <span>CỔNG HỌC VIÊN</span>
+                <strong>Học phí &amp; Thanh toán</strong>
+            </div>
+
+            <div class="student-topbar-user">
+                <span class="student-avatar-small">
+                    @studentName.Substring(0, 1).ToUpper()
+                </span>
+
+                <span class="student-topbar-user-info">
+                    <strong>@studentName</strong>
+                    <small>Học viên</small>
+                </span>
+            </div>
+
+        </header>
+
+        <main class="student-content">
+
+            <div class="student-breadcrumb">
+                Dashboard <span>/</span> Học phí &amp; Thanh toán
+            </div>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @* TIÊU ĐỀ *@
+            <section class="billing-intro">
+
+                <div>
+                    <span class="student-panel-eyebrow">
+                        FINANCIAL OVERVIEW
+                    </span>
+
+                    <h1>Học phí &amp; Thanh toán</h1>
+
+                    <p>
+                        Theo dõi học phí các lớp đã duyệt,
+                        số tiền đã đóng và lịch sử giao dịch.
+                    </p>
+                </div>
+
+            </section>
+
+            @* THỐNG KÊ HỌC PHÍ *@
+            <section class="billing-summary-grid">
+
+                <article class="billing-summary-card">
+
+                    <span class="billing-summary-icon billing-icon-blue">
+                        ₫
+                    </span>
+
+                    <span class="billing-summary-label">
+                        TỔNG HỌC PHÍ
+                    </span>
+
+                    <strong>
+                        @Model.TotalTuitionFee.ToString("N0") VNĐ
+                    </strong>
+
+                </article>
+
+                <article class="billing-summary-card">
+
+                    <span class="billing-summary-icon billing-icon-green">
+                        ✓
+                    </span>
+
+                    <span class="billing-summary-label">
+                        ĐÃ THANH TOÁN
+                    </span>
+
+                    <strong>
+                        @Model.TotalPaid.ToString("N0") VNĐ
+                    </strong>
+
+                </article>
+
+                <article class="billing-summary-card billing-summary-card--due">
+
+                    <span class="billing-summary-icon billing-icon-red">
+                        !
+                    </span>
+
+                    <span class="billing-summary-label">
+                        CÒN LẠI (ƯỚC TÍNH)
+                    </span>
+
+                    <strong>
+                        @Model.OutstandingBalance.ToString("N0") VNĐ
+                    </strong>
+
+                </article>
+
+            </section>
+
+            @* THÔNG BÁO CÔNG NỢ *@
+            @if (Model.OutstandingBalance > 0)
+            {
+                <section class="billing-notice">
+
+                    <div class="billing-notice-icon">!</div>
+
+                    <div class="billing-notice-content">
+                        <h2>Bạn còn khoản học phí cần thanh toán</h2>
+
+                        <p>
+                            Số tiền còn lại ước tính:
+                            <strong>
+                                @Model.OutstandingBalance.ToString("N0") VNĐ
+                            </strong>.
+                            Vui lòng liên hệ trung tâm để xác nhận
+                            số tiền và phương thức thanh toán.
+                        </p>
+                    </div>
+
+                    @Html.ActionLink(
+                        "Liên hệ thanh toán",
+                        "Contact",
+                        "Home",
+                        null,
+                        new { @class = "btn btn-primary billing-contact-button" })
+
+                </section>
+            }
+
+            @* CÁC KHOẢN HỌC PHÍ THEO LỚP *@
+            <section class="student-panel billing-panel">
+
+                <div class="student-panel-heading">
+                    <div>
+                        <span class="student-panel-eyebrow">
+                            ENROLLMENT BILLING
+                        </span>
+
+                        <h2>Học phí theo lớp học</h2>
+
+                        <p>
+                            Các lớp đã duyệt hoặc đang học của bạn.
+                        </p>
+                    </div>
+                </div>
+
+                @if (billableEnrollments.Any())
+                {
+                    <div class="billing-class-list">
+
+                        @foreach (var enrollment in billableEnrollments)
+                        {
+                            var course = enrollment.Class.Course;
+                            var tuition = course.TuitionFee;
+
+                            var paidForEnrollment = payments
+                                .Where(p =>
+                                    p.EnrollmentId == enrollment.Id &&
+                                    (p.PaymentStatus == "Paid" ||
+                                     p.PaymentStatus == "Partial" ||
+                                     p.PaymentStatus == "Completed"))
+                                .Sum(p => p.AmountPaid);
+
+                            var remaining = Math.Max(
+                                tuition - paidForEnrollment, 0m);
+
+                            <article class="billing-class-item">
+
+                                <div class="billing-class-main">
+
+                                    <span class="billing-course-level">
+                                        @course.Level
+                                    </span>
+
+                                    <h3>@course.CourseName</h3>
+
+                                    <p>
+                                        Lớp: @enrollment.Class.ClassName
+                                    </p>
+
+                                    <span class="billing-enrollment-status">
+                                        @(enrollment.Status == "Active"
+                                            ? "Đang học"
+                                            : "Đã duyệt")
+                                    </span>
+
+                                </div>
+
+                                <div class="billing-class-amounts">
+
+                                    <div>
+                                        <span>Tổng học phí</span>
+                                        <strong>
+                                            @tuition.ToString("N0") VNĐ
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Đã thanh toán</span>
+                                        <strong class="billing-paid-text">
+                                            @paidForEnrollment.ToString("N0") VNĐ
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Còn lại</span>
+                                        <strong class="billing-due-text">
+                                            @remaining.ToString("N0") VNĐ
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="student-empty-state">
+
+                        <div class="student-empty-icon">₫</div>
+
+                        <h3>Chưa có khoản học phí nào</h3>
+
+                        <p>
+                            Khi đơn đăng ký lớp học của bạn được duyệt,
+                            thông tin học phí sẽ xuất hiện tại đây.
+                        </p>
+
+                        @Html.ActionLink(
+                            "Khám phá khóa học",
+                            "Index",
+                            "Courses",
+                            null,
+                            new { @class = "btn btn-primary" })
+
+                    </div>
+                }
+
+            </section>
+
+            @* LỊCH SỬ THANH TOÁN *@
+            <section class="student-panel billing-panel">
+
+                <div class="student-panel-heading">
+                    <div>
+                        <span class="student-panel-eyebrow">
+                            PAYMENT HISTORY
+                        </span>
+
+                        <h2>Lịch sử thanh toán</h2>
+
+                        <p>
+                            Các giao dịch được ghi nhận trong hệ thống.
+                        </p>
+                    </div>
+                </div>
+
+                @if (payments.Any())
+                {
+                    <div class="billing-table-wrapper">
+
+                        <table class="table billing-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Mã biên lai</th>
+                                    <th>Lớp học</th>
+                                    <th>Số tiền</th>
+                                    <th>Ngày thanh toán</th>
+                                    <th>Phương thức</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var payment in payments)
+                                {
+                                    var enrollment = payment.Enrollment;
+
+                                    var className =
+                                        enrollment != null &&
+                                        enrollment.Class != null
+                                        ? enrollment.Class.ClassName
+                                        : "Không có thông tin lớp";
+
+                                    var methodLabel =
+                                        payment.PaymentMethod == "Cash"
+                                        ? "Tiền mặt"
+                                        : payment.PaymentMethod == "Bank Transfer"
+                                            ? "Chuyển khoản"
+                                            : payment.PaymentMethod == "Credit Card"
+                                                ? "Thẻ thanh toán"
+                                                : payment.PaymentMethod;
+
+                                    var statusLabel =
+                                        payment.PaymentStatus == "Paid"
+                                        || payment.PaymentStatus == "Completed"
+                                        ? "Đã thanh toán"
+                                        : payment.PaymentStatus == "Partial"
+                                            ? "Thanh toán một phần"
+                                            : payment.PaymentStatus == "Pending"
+                                                ? "Chờ xác nhận"
+                                                : payment.PaymentStatus;
+
+                                    var statusClass =
+                                        payment.PaymentStatus == "Paid"
+                                        || payment.PaymentStatus == "Completed"
+                                        ? "billing-status--paid"
+                                        : payment.PaymentStatus == "Partial"
+                                            ? "billing-status--partial"
+                                            : "billing-status--pending";
+
+                                    <tr>
+
+                                        <td>
+                                            <strong>
+                                                @payment.ReceiptNumber
+                                            </strong>
+                                        </td>
+
+                                        <td>@className</td>
+
+                                        <td class="billing-table-amount">
+                                            @payment.AmountPaid.ToString("N0") VNĐ
+                                        </td>
+
+                                        <td>
+                                            @payment.PaymentDate.ToString("dd/MM/yyyy")
+                                        </td>
+
+                                        <td>@methodLabel</td>
+
+                                        <td>
+                                            <span class="billing-status @statusClass">
+                                                @statusLabel
+                                            </span>
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="student-empty-state">
+
+                        <div class="student-empty-icon">▤</div>
+
+                        <h3>Chưa có giao dịch thanh toán</h3>
+
+                        <p>
+                            Lịch sử giao dịch sẽ được cập nhật
+                            khi trung tâm ghi nhận thanh toán.
+                        </p>
+
+                    </div>
+                }
+
+            </section>
+
+            @* HƯỚNG DẪN VÀ HỖ TRỢ *@
+            <section class="billing-help-grid">
+
+                <article class="billing-help-card">
+
+                    <span class="billing-help-icon">₫</span>
+
+                    <h3>Phương thức thanh toán</h3>
+
+                    <p>Trung tâm hiện quản lý các hình thức:</p>
+
+                    <ul>
+                        <li>Tiền mặt</li>
+                        <li>Chuyển khoản ngân hàng</li>
+                        <li>Thẻ thanh toán</li>
+                    </ul>
+
+                    <p>
+                        Vui lòng liên hệ trung tâm để xác nhận
+                        phương thức được hỗ trợ cho giao dịch của bạn.
+                    </p>
+
+                </article>
+
+                <article class="billing-help-card">
+
+                    <span class="billing-help-icon">✓</span>
+
+                    <h3>Quy định học phí</h3>
+
+                    <p>
+                        Số tiền còn lại trên trang là số liệu ước tính
+                        từ học phí khóa học trừ các giao dịch đã ghi nhận.
+                    </p>
+
+                    <p>
+                        Nếu thông tin chưa chính xác, hãy liên hệ trung tâm
+                        để đối chiếu trước khi thanh toán.
+                    </p>
+
+                </article>
+
+                <article class="billing-help-card">
+
+                    <span class="billing-help-icon">?</span>
+
+                    <h3>Cần hỗ trợ thanh toán?</h3>
+
+                    <p>
+                        Liên hệ nhân viên trung tâm nếu bạn cần kiểm tra
+                        biên lai, số tiền hoặc trạng thái giao dịch.
+                    </p>
+
+                    @Html.ActionLink(
+                        "Liên hệ trung tâm →",
+                        "Contact",
+                        "Home",
+                        null,
+                        new { @class = "student-panel-link" })
+
+                </article>
+
+            </section>
+
+        </main>
+
+        <footer class="student-footer">
+            <span>© @DateTime.Now.Year English Center</span>
+            <span>Student Information System</span>
+        </footer>
+
+    </div>
+
+</div>

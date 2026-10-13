@@ -1,0 +1,276 @@
+﻿@model English_language_center_management_system.Models.ViewModels.Classes.ClassCreateViewModel
+
+@using System
+@using System.Collections.Generic
+@using System.Web.Mvc
+
+@{
+    ViewBag.Title = "Mở lớp học mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var selectedStatus =
+        Model != null && !String.IsNullOrWhiteSpace(Model.Status)
+        ? Model.Status
+        : "Open";
+
+    var statusOptions = new List<SelectListItem>
+{
+        new SelectListItem
+        {
+            Value = "Open",
+            Text = "Mở đăng ký",
+            Selected = selectedStatus == "Open"
+        },
+        new SelectListItem
+        {
+            Value = "Full",
+            Text = "Đã đủ sĩ số",
+            Selected = selectedStatus == "Full"
+        },
+        new SelectListItem
+        {
+            Value = "Studying",
+            Text = "Đang học",
+            Selected = selectedStatus == "Studying"
+        },
+        new SelectListItem
+        {
+            Value = "Completed",
+            Text = "Đã hoàn thành",
+            Selected = selectedStatus == "Completed"
+        },
+        new SelectListItem
+        {
+            Value = "Closed",
+            Text = "Đã đóng",
+            Selected = selectedStatus == "Closed"
+        }
+    };
+}
+
+<div class="admin-class-form-page">
+
+    <div class="admin-class-form-heading">
+        <div>
+            <div class="admin-class-form-eyebrow">
+                QUẢN LÝ ĐÀO TẠO
+            </div>
+
+            <h2>Mở lớp học mới</h2>
+
+            <p>
+                Nhập thông tin lớp học, chọn khóa học và phân công giáo viên.
+            </p>
+        </div>
+
+        <div class="admin-class-form-heading-icon">
+            <i class="glyphicon glyphicon-education"></i>
+        </div>
+    </div>
+
+    <div class="admin-class-form-card">
+
+        <div class="admin-class-form-card-heading">
+            <h3>Thông tin lớp học</h3>
+            <p>Các trường có dấu * là thông tin bắt buộc.</p>
+        </div>
+
+        @using (Html.BeginForm("Create", "Classes", FormMethod.Post,
+            new { @class = "admin-class-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.ValidationSummary(
+                false,
+                "",
+                new { @class = "admin-class-form-validation-summary" }
+            )
+
+            <div class="admin-class-form-grid">
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.CourseId,
+                        "Khóa học *",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.DropDownListFor(
+                        m => m.CourseId,
+                        (IEnumerable<SelectListItem>)ViewBag.CourseId,
+                        "-- Chọn khóa học --",
+                        new { @class = "admin-class-form-control" }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.CourseId,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+                </div>
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.TeacherId,
+                        "Giáo viên phụ trách",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.DropDownListFor(
+                        m => m.TeacherId,
+                        (IEnumerable<SelectListItem>)ViewBag.TeacherId,
+                        "-- Chưa phân công giáo viên --",
+                        new { @class = "admin-class-form-control" }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.TeacherId,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+
+                    <small class="admin-class-form-hint">
+                        Có thể để trống và phân công giáo viên sau.
+                    </small>
+                </div>
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.ClassName,
+                        "Tên lớp học *",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.ClassName,
+                        new
+                        {
+                            @class = "admin-class-form-control",
+                            placeholder = "Ví dụ: IELTS 6.5 - K01",
+                            maxlength = "100"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.ClassName,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+                </div>
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.Room,
+                        "Phòng học",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.Room,
+                        new
+                        {
+                            @class = "admin-class-form-control",
+                            placeholder = "Ví dụ: Phòng A101",
+                            maxlength = "50"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.Room,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+                </div>
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.MaxCapacity,
+                        "Sĩ số tối đa *",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.MaxCapacity,
+                        new
+                        {
+                            @class = "admin-class-form-control",
+                            type = "number",
+                            min = "1",
+                            max = "200"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.MaxCapacity,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+
+                    <small class="admin-class-form-hint">
+                        Sĩ số phải từ 1 đến 200 học viên.
+                    </small>
+                </div>
+
+                <div class="admin-class-form-group">
+                    @Html.LabelFor(
+                        m => m.Status,
+                        "Trạng thái *",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.DropDownListFor(
+                        m => m.Status,
+                        statusOptions,
+                        new { @class = "admin-class-form-control" }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.Status,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+                </div>
+
+                <div class="admin-class-form-group admin-class-form-full">
+                    @Html.LabelFor(
+                        m => m.ScheduleDescription,
+                        "Lịch học",
+                        new { @class = "admin-class-form-label" }
+                    )
+
+                    @Html.TextAreaFor(
+                        m => m.ScheduleDescription,
+                        new
+                        {
+                            @class = "admin-class-form-control admin-class-form-textarea",
+                            placeholder = "Ví dụ: Thứ 2, 4, 6 - 18:00 đến 20:00",
+                            rows = "4",
+                            maxlength = "255"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.ScheduleDescription,
+                        "",
+                        new { @class = "admin-class-form-error" }
+                    )
+                </div>
+
+            </div>
+
+            <div class="admin-class-form-actions">
+                <a href="@Url.Action("Index", "Classes")"
+                   class="admin-class-btn admin-class-btn-cancel">
+                    <i class="glyphicon glyphicon-arrow-left"></i>
+                    Quay lại
+                </a>
+
+                <button type="submit"
+                        class="admin-class-btn admin-class-btn-submit">
+                    <i class="glyphicon glyphicon-floppy-disk"></i>
+                    Tạo lớp học
+                </button>
+            </div>
+        }
+    </div>
+</div>
